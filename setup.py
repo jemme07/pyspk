@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pyspk",
-    version=0.1.1,
+    version=0.2,
     description="Python implementation of the SPK model.",
     url="https://github.com/jemme07/SPK",
     author="Jaime Salcido",
