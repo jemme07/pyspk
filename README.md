@@ -1,12 +1,13 @@
 # SPK - A hydrodynamical simulation-based model for the impact of baryon physics on the non-linear matter power spectrum
 
-pyspk is a python package aimed at predicting the suppression of the total matter power spectrum as a function of the baryon fraction of haloes and redshift.
+pyspk is a python package aimed at predicting the suppression of the total matter power spectrum due to baryonic physics as a function of the baryon fraction of haloes and redshift.
 
 ### Requirements
 
 The module requires the following:
 
-- XXX
+- numpy
+- scipy
 
 ### Installation
 
@@ -16,14 +17,19 @@ The easiest way to install pyspk is using pip:
 pip install pyspk [--user]
 ```
 
+The --user flag may be required if you do not have root privileges.
+
 ### Usage
 
-XXX
+A simple example:
 
 ```
-import spk
+import pyspk as spk
 
-spk
+z = 0.125
+fb_a = 8.44e-05
+fb_pow = 0.275
+k, sup = spk.sup_model(SO=200, z=z, fb_a=fb_a, fb_pow=fb_pow, k_max=10)
 
 ```
 
