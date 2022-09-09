@@ -1,4 +1,4 @@
-# SPK - A hydrodynamical simulation-based model for the impact of baryon physics on the non-linear matter power spectrum
+# py-SP(k) - A hydrodynamical simulation-based model for the impact of baryon physics on the non-linear matter power spectrum
                           _____ ____   ____   _ 
         ____  __  __     / ___// __ \_/_/ /__| |
        / __ \/ / / /_____\__ \/ /_/ / // //_// /
