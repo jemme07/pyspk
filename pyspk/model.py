@@ -95,6 +95,14 @@ def optimal_mass(SO, z, k):
     output: array of float
         optimal mass in M_sun units
     """
+    k_max = _np.max(k)
+    if k_max > 12:
+        raise Exception('\033[91m py-spk was calibrated up to k_max = 12 [h/Mpc] '
+                        'Please specify values of k <= 12 [h/Mpc] \033[0m')
+    elif k_max > 8:
+        _warnings.warn('\033[33m \n Warning: Scales with k_max > k_ny = 8 [h/Mpc] '
+                       'may not be accurately reproduced by the model. \033[0m')
+
     params = _get_params(SO, z)
     output = params['alpha'] - (params['alpha'] - params['beta']) * _np.power(k, params['gamma'])
     return _np.power(10, output)
@@ -255,7 +263,8 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_norm=1, M_halo=None, fb=None, k_
 
     if fb_a or fb_pow:
         if verbose:
-            print('\033[36m [py-spk:] Using power-law fit for fb - M_halo at z=%.3f \033[0m' % z)
+            print('\033[36m [py-spk:] Using power-law fit for fb - M_halo at z=%.3f, ' 
+                  'normalised at M_halo = %.2e [M_sun] \033[0m' % (z, fb_norm))
         try:
             f_b = _power_law(10 ** best_mass, fb_a, fb_pow, fb_norm)
         except:
