@@ -1,6 +1,15 @@
 import numpy as _np
 from scipy.interpolate import PchipInterpolator as _PchipInterpolator
 from .fit_vals import best_fit_vals as _best_fit_vals
+import warnings as _warnings
+
+
+def _custom_formatwarning(msg, *args, **kwargs):
+    # ignore everything except the message
+    return str(msg) + '\n'
+
+
+_warnings.formatwarning = _custom_formatwarning
 
 
 def _power_law(m_halo, fb_a, fb_pow, fb_norm=1):
@@ -54,7 +63,7 @@ def _optimal_mass_funct(k, params):
     Parameters
     ----------
     k : array of float
-        co-moving wavenumber in units [k/Mpc]
+        co-moving wavenumber in units [h/Mpc]
     prams : dict
         dictionary containing the best fitting parameters of the SP(k) model at a specific redshift. 
 
@@ -79,7 +88,7 @@ def optimal_mass(SO, z, k):
     z : float
         redshift z
     k : array of float
-        co-moving wavenumber in units [k/Mpc]
+        co-moving wavenumber in units [h/Mpc]
 
     Returns
     -------
@@ -98,7 +107,7 @@ def _lambda_funct(x, params):
     Parameters
     ----------
     k : array of float
-        co-moving wavenumber in units [k/Mpc]
+        co-moving wavenumber in units [h/Mpc]
     prams : dict
         dictionary containing the best fitting parameters of the SP(k) model at a specific redshift. 
 
@@ -118,7 +127,7 @@ def _mu_funct(x, params):
     Parameters
     ----------
     k : array of float
-        co-moving wavenumber in units [k/Mpc]
+        co-moving wavenumber in units [h/Mpc]
     prams : dict
         dictionary containing the best fitting parameters of the SP(k) model at a specific redshift. 
 
@@ -141,7 +150,7 @@ def _nu_func(x, params):
     Parameters
     ----------
     k : array of float
-        co-moving wavenumber in units [k/Mpc]
+        co-moving wavenumber in units [h/Mpc]
     prams : dict
         dictionary containing the best fitting parameters of the SP(k) model at a specific redshift. 
 
@@ -184,7 +193,7 @@ def _get_params(SO, z):
     return params
 
 
-def sup_model(SO, z, fb_a=None, fb_pow=None, fb_norm=1, M_halo=None, fb=None, k_min=0.1, k_max=8, n=100):
+def sup_model(SO, z, fb_a=None, fb_pow=None, fb_norm=1, M_halo=None, fb=None, k_min=0.1, k_max=8, n=100, verbose=True):
     """
     Returns the suppression of the total matter power spectrum as a function of scale 'k' using the SP(k) model.
     Automatically selects the required optimal mass as a function of scale and redshift. Requires the baryon 
@@ -210,25 +219,33 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_norm=1, M_halo=None, fb=None, k_
     M_halo : array of float, optional
         array containing the (binned) halo mass for the fb - M-halo relation in M_sun units
     k_min : float, default 0.1
-        minimum co-moving wavenumber in units [k/Mpc]
+        minimum co-moving wavenumber in units [h/Mpc]
     k_max : float, default 8, max 12
-        maximum co-moving wavenumber in units [k/Mpc]. Default is set to the Nyquist frequency of the Antilles
+        maximum co-moving wavenumber in units [h/Mpc]. Default is set to the Nyquist frequency of the Antilles
         simulations (see Salcido et al. 2022). 
     n : int, default 100
         number of equally spaced co-moving wavenumber in log-spaced between k_min and k_max.
+    verbose : boolean, default True
+        Run in verbose mode
     Returns
     -------
     k: array of float
-        array with the co-moving wavenumber in units [k/Mpc]
+        array with the co-moving wavenumber in units [h/Mpc]
     sup: array of float
         array with the suppression of the total matter power spectrum as a function of scale
 
     Notes
     ----------
-    The maximum co-moving wavenumber in units [k/Mpc] is set to the Nyquist frequency of the Antilles simulations 
-    (see Salcido et al. 2022). Although SP(k) was fitted up to k = 12 [k/Mpc], we caution the user that setting 
-    𝑘 > 𝑘Ny (8 [k/Mpc]) might not be representative of the true uncertainties in the data. 
+    The maximum co-moving wavenumber in units [h/Mpc] is set to the Nyquist frequency of the Antilles simulations 
+    (see Salcido et al. 2022). Although SP(k) was fitted up to k = 12 [h/Mpc], we caution the user that setting 
+    𝑘 > 𝑘Ny (8 [h/Mpc]) might not be representative of the true uncertainties in the data. 
     """
+    if k_max > 12:
+        raise Exception('\033[91m py-spk was calibrated up to k_max = 12 [h/Mpc] '
+                        'Please specify k_max <= 12 [h/Mpc] \033[0m')
+    elif k_max > 8:
+        _warnings.warn('\033[33m \n Warning: Scales with k_max > k_ny = 8 [h/Mpc] '
+                       'may not be accurately reproduced by the model. \033[0m')
 
     params = _get_params(SO, z)
     k = _np.logspace(_np.log10(k_min), _np.log10(k_max), n)
@@ -237,28 +254,23 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_norm=1, M_halo=None, fb=None, k_
     best_mass = _optimal_mass_funct(k, params)
 
     if fb_a or fb_pow:
-        print('''\033[33m 
-              Using power-law fit for the fb - M_halo at z=%.2f
-              \033[0m''' % z)
+        if verbose:
+            print('\033[36m [py-spk:] Using power-law fit for fb - M_halo at z=%.3f \033[0m' % z)
         try:
             f_b = _power_law(10 ** best_mass, fb_a, fb_pow, fb_norm)
         except:
-            raise Exception('''\033[91m 
-                            When using power-law, both parameters should be given. 
-                            Please specify: fb_a and fb_pow 
-                            \033[0m''')
+            raise Exception('\033[91m When using power-law, both parameters should be given. '
+                            'Please specify: fb_a and fb_pow \033[0m')
     else:
-        print('''\033[33m
-              Using binned data for fb - M_halo at z=%.2f
-              \033[0m''' % z)
+        if verbose:
+            print('\033[36m [py-spk:] Using binned data for fb - M_halo at z=%.3f \033[0m' % z)
         try:
             fb_inter = _PchipInterpolator(M_halo, fb)
             f_b = fb_inter(10 ** best_mass)
         except:
-            raise Exception('''\033[91m 
-                            When using binned data, both halo mass and baryon fraction arrays should be given. 
-                            Please specify: M_halo(array) and fb(array) 
-                            \033[0m''')
+            raise Exception('\033[91m When using binned data, both halo mass and baryon '
+                            'fraction arrays should be given. Please specify: '
+                            'M_halo (array) and fb (array). \033[0m')
 
     x0 = _lambda_funct(logk, params)
     x1 = _mu_funct(logk, params)
