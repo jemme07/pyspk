@@ -201,7 +201,8 @@ def _get_params(SO, z):
     return params
 
 
-def sup_model(SO, z, fb_a=None, fb_pow=None, fb_norm=1, M_halo=None, fb=None, k_min=0.1, k_max=8, n=100, verbose=True):
+def sup_model(SO, z, fb_a=None, fb_pow=None, fb_norm=1, M_halo=None, 
+              fb=None, k_min=0.1, k_max=8, n=100, verbose=True):
     """
     Returns the suppression of the total matter power spectrum as a function of scale 'k' using the SP(k) model.
     Automatically selects the required optimal mass as a function of scale and redshift. Requires the baryon 
