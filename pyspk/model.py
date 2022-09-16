@@ -1,15 +1,19 @@
 import numpy as _np
-from scipy.interpolate import PchipInterpolator as _PchipInterpolator
+from scipy.interpolate import Akima1DInterpolator as _Akima1DInterpolator
+from scipy.interpolate import LinearNDInterpolator as _LinearNDInterpolator
 from .fit_vals import best_fit_vals as _best_fit_vals
+from .fit_vals import limits as _limits
 import warnings as _warnings
+import pkgutil as _pkgutil
 
 
-def _custom_formatwarning(msg, *args, **kwargs):
-    # ignore everything except the message
-    return str(msg) + '\n'
+_inter_min_x0 = _Akima1DInterpolator(_limits['z'], _limits['min_x0'])
+_inter_min_x1 = _Akima1DInterpolator(_limits['z'], _limits['min_x1'])
+_inter_min_x2 = _Akima1DInterpolator(_limits['z'], _limits['min_x2'])
 
-
-_warnings.formatwarning = _custom_formatwarning
+_inter_max_x0 = _Akima1DInterpolator(_limits['z'], _limits['max_x0'])
+_inter_max_x1 = _Akima1DInterpolator(_limits['z'], _limits['max_x1'])
+_inter_max_x2 = _Akima1DInterpolator(_limits['z'], _limits['max_x2'])
 
 
 def _power_law(m_halo, fb_a, fb_pow, fb_norm=1):
@@ -76,7 +80,7 @@ def _optimal_mass_funct(k, params):
     return output
 
 
-def optimal_mass(SO, z, k):
+def optimal_mass(SO, z, k, verbose=False):
     """
     Optimal mass function as a function of scale and redshift for a specific 
     spherical over-density. Defined in eq.(2) in Salcido et al. (2022).
@@ -89,6 +93,8 @@ def optimal_mass(SO, z, k):
         redshift z
     k : array of float
         co-moving wavenumber in units [h/Mpc]
+    verbose : boolean, default True
+        Run in verbose mode
 
     Returns
     -------
@@ -97,11 +103,12 @@ def optimal_mass(SO, z, k):
     """
     k_max = _np.max(k)
     if k_max > 12:
-        raise Exception('\033[91m py-spk was calibrated up to k_max = 12 [h/Mpc] '
+        raise Exception('\033[91mpy-spk was calibrated up to k_max = 12 [h/Mpc] '
                         'Please specify values of k <= 12 [h/Mpc] \033[0m')
-    elif k_max > 8:
-        _warnings.warn('\033[33m \n Warning: Scales with k_max > k_ny = 8 [h/Mpc] '
-                       'may not be accurately reproduced by the model. \033[0m')
+    if verbose:
+        if k_max > 8:
+            _warnings.warn('\033[33mScales with k_max > k_ny = 8 [h/Mpc] '
+                           'may not be accurately reproduced by the model. \033[0m', stacklevel=2)
 
     params = _get_params(SO, z)
     output = params['alpha'] - (params['alpha'] - params['beta']) * _np.power(k, params['gamma'])
@@ -201,8 +208,8 @@ def _get_params(SO, z):
     return params
 
 
-def sup_model(SO, z, fb_a=None, fb_pow=None, fb_norm=1, M_halo=None, 
-              fb=None, k_min=0.1, k_max=8, n=100, verbose=True):
+def sup_model(SO, z, fb_a=None, fb_pow=None, fb_norm=1, M_halo=None, fb=None, extrapolate=False,
+              k_min=0.1, k_max=8, n=100, errors=False, verbose=False):
     """
     Returns the suppression of the total matter power spectrum as a function of scale 'k' using the SP(k) model.
     Automatically selects the required optimal mass as a function of scale and redshift. Requires the baryon 
@@ -226,7 +233,10 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_norm=1, M_halo=None,
         array containing the (binned) baryon fraction normalised by the universal baryon fraction: 
         f_b / (Omega_b / Omega_m) for the fb - M-halo relation.
     M_halo : array of float, optional
-        array containing the (binned) halo mass for the fb - M-halo relation in M_sun units
+        array containing the (binned) halo mass for the fb - M-halo relation in M_sun units.
+        For interpolation, out-of-bounds points return NaNs.
+    extrapolate: boolean, default False
+        Whether to extrapolate to out-of-bounds points based on first and last intervals, or to return NaNs.
     k_min : float, default 0.1
         minimum co-moving wavenumber in units [h/Mpc]
     k_max : float, default 8, max 12
@@ -250,37 +260,64 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_norm=1, M_halo=None,
     𝑘 > 𝑘Ny (8 [h/Mpc]) might not be representative of the true uncertainties in the data. 
     """
     if k_max > 12:
-        raise Exception('\033[91m py-spk was calibrated up to k_max = 12 [h/Mpc] '
-                        'Please specify k_max <= 12 [h/Mpc] \033[0m')
-    elif k_max > 8:
-        _warnings.warn('\033[33m \n Warning: Scales with k_max > k_ny = 8 [h/Mpc] '
-                       'may not be accurately reproduced by the model. \033[0m')
+        raise Exception('\033[91mpy-spk was calibrated up to k_max = 12 [h/Mpc] '
+                        'Please specify k_max <= 12 [h/Mpc] \033[0m') from None
+    if verbose:
+        if k_max > 8:
+            _warnings.warn('\033[33mScales with k_max > k_ny = 8 [h/Mpc] '
+                           'may not be accurately reproduced by the model. \033[0m', stacklevel=2)
 
     params = _get_params(SO, z)
-    k = _np.logspace(_np.log10(k_min), _np.log10(k_max), n)
+    k = _np.round(_np.logspace(_np.log10(k_min), _np.log10(k_max), n), 6)
     logk = _np.log10(k)
 
     best_mass = _optimal_mass_funct(k, params)
 
     if fb_a or fb_pow:
         if verbose:
-            print('\033[36m [py-spk:] Using power-law fit for fb - M_halo at z=%.3f, ' 
+            print('\033[36mUsing power-law fit for fb - M_halo at z=%.3f, ' 
                   'normalised at M_halo = %.2e [M_sun] \033[0m' % (z, fb_norm))
         try:
             f_b = _power_law(10 ** best_mass, fb_a, fb_pow, fb_norm)
         except:
-            raise Exception('\033[91m When using power-law, both parameters should be given. '
-                            'Please specify: fb_a and fb_pow \033[0m')
+            raise Exception('\033[91mWhen using a power-law, both parameters should be given. '
+                            'Please specify: fb_a and fb_pow \033[0m') from None
     else:
         if verbose:
-            print('\033[36m [py-spk:] Using binned data for fb - M_halo at z=%.3f \033[0m' % z)
+            print('\033[36mUsing binned data for fb - M_halo at z=%.3f \033[0m' % z)
         try:
-            fb_inter = _PchipInterpolator(M_halo, fb)
-            f_b = fb_inter(10 ** best_mass)
+            fb_inter = _Akima1DInterpolator(_np.log10(M_halo), _np.log10(fb))
+            if extrapolate:
+                fb_inter.extrapolate = True
+            f_b = 10 ** fb_inter(best_mass)
         except:
-            raise Exception('\033[91m When using binned data, both halo mass and baryon '
-                            'fraction arrays should be given. Please specify: '
-                            'M_halo (array) and fb (array). \033[0m')
+            raise Exception('\033[91mWhen using binned data, both halo mass and baryon '
+                            'fraction should be given as monotonically increasing arrays. '
+                            'Please specify: M_halo (array) and fb (array). \033[0m')
+
+    min_fb = _inter_min_x0(z) + _inter_min_x1(z) * best_mass + _inter_min_x2(z) * best_mass ** 2
+    max_fb = _inter_max_x0(z) + _inter_max_x1(z) * best_mass + _inter_max_x2(z) * best_mass ** 2
+
+    out_min = f_b < min_fb
+    out_max = f_b > max_fb
+
+    mass_out_min = best_mass[out_min]
+
+    if any(out_min):
+        _warnings.warn('\033[91mFound baryon fraction values outside fitting limits. '
+                       'fb < lower_limit between %.1e <= M_halo [M_sun] <= %.1e. ' 
+                       'sup_model() will return NaNs within those limits. \033[0m' 
+                       % (10 ** mass_out_min.min(), 10 ** mass_out_min.max()), stacklevel=2)
+
+    mass_out_max = best_mass[out_max]
+
+    if any(out_max):
+        _warnings.warn('\033[91mFound baryon fraction values outside fitting limits. '
+                       'fb > upper_limit between %.1e <= M_halo [M_sun] <= %.1e. ' 
+                       'sup_model() will return NaNs within those limits. \033[0m' 
+                       % (10 ** mass_out_max.min(), 10 ** mass_out_max.max()), stacklevel=2)
+
+    mask = _np.logical_or(out_min,out_max)
 
     x0 = _lambda_funct(logk, params)
     x1 = _mu_funct(logk, params)
@@ -288,4 +325,25 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_norm=1, M_halo=None,
 
     sup = x0 - (x0 - x1) * _np.exp(-x2 * f_b)
 
-    return k, sup
+    sup[mask] = _np.NAN
+
+    if errors:
+        raw_table = _pkgutil.get_data(__name__, 'stat_errors_' + str (SO) + '.csv').decode('utf-8').splitlines()
+        table = _np.loadtxt(raw_table, delimiter=",", skiprows=1)
+        coords = table[:, [0, 1, 2]]
+        interp_68_m = _LinearNDInterpolator(coords, table[:, 4], rescale=True)
+        interp_68_p = _LinearNDInterpolator(coords, table[:, 5], rescale=True)
+        interp_95_m = _LinearNDInterpolator(coords, table[:, 6], rescale=True)
+        interp_95_p = _LinearNDInterpolator(coords, table[:, 7], rescale=True)
+
+        z_array = _np.full_like(k, z)
+        data = _np.column_stack([k, f_b, z_array])
+        error_68_m = interp_68_m(data)
+        error_68_p = interp_68_p(data)
+        error_95_m = interp_95_m(data)
+        error_95_p = interp_95_p(data)
+
+        return k, sup, error_68_m, error_68_p, error_95_m, error_95_p
+
+    else:
+        return k, sup
