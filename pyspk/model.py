@@ -6,17 +6,9 @@ from .fit_vals import limits as _limits
 import warnings as _warnings
 import pkgutil as _pkgutil
 
+_warnings.filterwarnings("always", category=UserWarning)
 
-_inter_min_x0 = _Akima1DInterpolator(_limits['z'], _limits['min_x0'])
-_inter_min_x1 = _Akima1DInterpolator(_limits['z'], _limits['min_x1'])
-_inter_min_x2 = _Akima1DInterpolator(_limits['z'], _limits['min_x2'])
-
-_inter_max_x0 = _Akima1DInterpolator(_limits['z'], _limits['max_x0'])
-_inter_max_x1 = _Akima1DInterpolator(_limits['z'], _limits['max_x1'])
-_inter_max_x2 = _Akima1DInterpolator(_limits['z'], _limits['max_x2'])
-
-
-def _power_law(m_halo, fb_a, fb_pow, fb_norm=1):
+def _power_law(m_halo, fb_a, fb_pow, fb_pivot=1):
     """
     Simple power-law function fit to the baryon fraction - halo mass relation
 
@@ -28,15 +20,15 @@ def _power_law(m_halo, fb_a, fb_pow, fb_norm=1):
         power law constant
     fb_pow : float
         power law exponent
-    fb_norm : float, default 1
-        power law normalisation. 
+    fb_pivot : float, default 1
+        power law pivot point. 
 
     Returns
     -------
     output: array of float
         baryon fraction normalised by the Universal baryon fraction: f_b / (Omega_b / Omega_m)
     """
-    fb = fb_a * _np.power(m_halo / fb_norm, fb_pow)
+    fb = fb_a * _np.power(m_halo / fb_pivot, fb_pow)
     return fb
 
 
@@ -88,9 +80,9 @@ def optimal_mass(SO, z, k, verbose=False):
     Parameters
     ----------
     SO : int
-        spherical over-density. (Only accepts 200 or 500)
+        spherical over-density. Only accepts 200 or 500
     z : float
-        redshift z
+        redshift z. Only accepts values of z <= 3
     k : array of float
         co-moving wavenumber in units [h/Mpc]
     verbose : boolean, default True
@@ -105,10 +97,9 @@ def optimal_mass(SO, z, k, verbose=False):
     if k_max > 12:
         raise Exception('\033[91mpy-spk was calibrated up to k_max = 12 [h/Mpc] '
                         'Please specify values of k <= 12 [h/Mpc] \033[0m')
-    if verbose:
-        if k_max > 8:
-            _warnings.warn('\033[33mScales with k_max > k_ny = 8 [h/Mpc] '
-                           'may not be accurately reproduced by the model. \033[0m', stacklevel=2)
+    if k_max > 8:
+        _warnings.warn('\033[33mScales with k_max > k_ny = 8 [h/Mpc] '
+                       'may not be accurately reproduced by the model. \033[0m', stacklevel=2)
 
     params = _get_params(SO, z)
     output = params['alpha'] - (params['alpha'] - params['beta']) * _np.power(k, params['gamma'])
@@ -180,6 +171,42 @@ def _nu_func(x, params):
     return output
 
 
+def get_limits(SO, z, m_halo):
+    """
+    Function that returns the baryon fraction fitting limits as a function of halo mass
+    and redshift.
+
+    Parameters
+    ----------
+    SO : int
+        spherical over-density. Only accepts 200 or 500
+    z : float
+        redshift z. Only accepts values of z <= 3
+    m_halo: array of float
+        halo mass in M_sun units
+
+    Returns
+    -------
+    min_fb: array of float
+        lower fitting limit for the baryon fraction normalised by the universal baryon fraction
+    max_fb: array of float
+        upper fitting limit for the baryon fraction normalised by the universal baryon fraction
+    """
+
+    inter_min_x0 = _Akima1DInterpolator(_limits[str(SO)]['z'], _limits[str(SO)]['min_x0'])
+    inter_min_x1 = _Akima1DInterpolator(_limits[str(SO)]['z'], _limits[str(SO)]['min_x1'])
+    inter_min_x2 = _Akima1DInterpolator(_limits[str(SO)]['z'], _limits[str(SO)]['min_x2'])
+
+    inter_max_x0 = _Akima1DInterpolator(_limits[str(SO)]['z'], _limits[str(SO)]['max_x0'])
+    inter_max_x1 = _Akima1DInterpolator(_limits[str(SO)]['z'], _limits[str(SO)]['max_x1'])
+    inter_max_x2 = _Akima1DInterpolator(_limits[str(SO)]['z'], _limits[str(SO)]['max_x2'])
+
+    min_fb = 10 ** (inter_min_x0(z) + inter_min_x1(z) * _np.log10(m_halo) + inter_min_x2(z) * _np.log10(m_halo) ** 2)
+    max_fb = 10 ** (inter_max_x0(z) + inter_max_x1(z) * _np.log10(m_halo) + inter_max_x2(z) * _np.log10(m_halo) ** 2)
+
+    return min_fb, max_fb
+
+
 def _get_params(SO, z):
     """
     Computes the best fit parameters for the SP(k) model at a specific redshift. 
@@ -187,9 +214,9 @@ def _get_params(SO, z):
     Parameters
     ----------
     SO : int
-        spherical over-density. (Only accepts 200 or 500)
+        spherical over-density. Only accepts 200 or 500
     z : float
-        redshift z 
+        redshift z. Only accepts values of z <= 3 
 
     Returns
     -------
@@ -208,7 +235,7 @@ def _get_params(SO, z):
     return params
 
 
-def sup_model(SO, z, fb_a=None, fb_pow=None, fb_norm=1, M_halo=None, fb=None, extrapolate=False,
+def sup_model(SO, z, fb_a=None, fb_pow=None, fb_pivot=1, M_halo=None, fb=None, extrapolate=False,
               k_min=0.1, k_max=8, n=100, errors=False, verbose=False):
     """
     Returns the suppression of the total matter power spectrum as a function of scale 'k' using the SP(k) model.
@@ -220,15 +247,15 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_norm=1, M_halo=None, fb=None, ex
     Parameters
     ----------
     SO : int
-        spherical over-density. (Only accepts 200 or 500)
+        spherical over-density. Only accepts 200 or 500
     z : float
-        redshift z
+        redshift z. Only accepts values of z <= 3
     fb_a : float, optional
         power law constant
     fb_pow : float, option
         power law exponent
-    fb_norm : float, optional, default 1
-        power law normalisation. 
+    fb_pivot : float, optional, default 1
+        power law pivot point. 
     fb : array of float, optional
         array containing the (binned) baryon fraction normalised by the universal baryon fraction: 
         f_b / (Omega_b / Omega_m) for the fb - M-halo relation.
@@ -244,14 +271,25 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_norm=1, M_halo=None, fb=None, ex
         simulations (see Salcido et al. 2022). 
     n : int, default 100
         number of equally spaced co-moving wavenumber in log-spaced between k_min and k_max.
+    errors : boolean, default False
+        enables additional output with the bootstrapped 68% and 95% confidence intervals from statistical errors.
     verbose : boolean, default True
-        Run in verbose mode
+        run in verbose mode
+        
     Returns
     -------
     k: array of float
         array with the co-moving wavenumber in units [h/Mpc]
     sup: array of float
         array with the suppression of the total matter power spectrum as a function of scale
+    error_68_m : array of float, optional
+        array with the -1 sigma confidence interval 
+    error_68_p : array of float, optional
+        array with the +1 sigma confidence interval 
+    error_95_m : array of float, optional
+        array with the -2 sigma confidence interval 
+    error_95_p : array of float, optional
+        array with the +2 sigma confidence interval 
 
     Notes
     ----------
@@ -259,13 +297,25 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_norm=1, M_halo=None, fb=None, ex
     (see Salcido et al. 2022). Although SP(k) was fitted up to k = 12 [h/Mpc], we caution the user that setting 
     𝑘 > 𝑘Ny (8 [h/Mpc]) might not be representative of the true uncertainties in the data. 
     """
+
+    if z < 0:
+        raise Exception('\033[91mIncorrect redshift.\033[0m') from None
+        
+    if z > 3:
+        raise Exception('\033[91mpy-spk was calibrated up to z = 3.0. '
+                        'Please specify z <= 3.0 \033[0m') from None
+
+    if z < 0.125:
+        _warnings.warn('\033[33mpy-spk was calibrated down to z = 0.125. Redshifts '
+                       'z < 0.125 may not be accurately reproduced by the model. \033[0m', stacklevel=2)
+
     if k_max > 12:
         raise Exception('\033[91mpy-spk was calibrated up to k_max = 12 [h/Mpc] '
                         'Please specify k_max <= 12 [h/Mpc] \033[0m') from None
-    if verbose:
-        if k_max > 8:
-            _warnings.warn('\033[33mScales with k_max > k_ny = 8 [h/Mpc] '
-                           'may not be accurately reproduced by the model. \033[0m', stacklevel=2)
+        
+    if k_max > 8:
+        _warnings.warn('\033[33mScales with k_max > k_ny = 8 [h/Mpc] '
+                       'may not be accurately reproduced by the model. \033[0m', stacklevel=2)
 
     params = _get_params(SO, z)
     k = _np.round(_np.logspace(_np.log10(k_min), _np.log10(k_max), n), 6)
@@ -276,9 +326,9 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_norm=1, M_halo=None, fb=None, ex
     if fb_a or fb_pow:
         if verbose:
             print('\033[36mUsing power-law fit for fb - M_halo at z=%.3f, ' 
-                  'normalised at M_halo = %.2e [M_sun] \033[0m' % (z, fb_norm))
+                  'normalised at M_halo = %.2e [M_sun] \033[0m' % (z, fb_pivot))
         try:
-            f_b = _power_law(10 ** best_mass, fb_a, fb_pow, fb_norm)
+            f_b = _power_law(10 ** best_mass, fb_a, fb_pow, fb_pivot)
         except:
             raise Exception('\033[91mWhen using a power-law, both parameters should be given. '
                             'Please specify: fb_a and fb_pow \033[0m') from None
@@ -295,8 +345,7 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_norm=1, M_halo=None, fb=None, ex
                             'fraction should be given as monotonically increasing arrays. '
                             'Please specify: M_halo (array) and fb (array). \033[0m')
 
-    min_fb = _inter_min_x0(z) + _inter_min_x1(z) * best_mass + _inter_min_x2(z) * best_mass ** 2
-    max_fb = _inter_max_x0(z) + _inter_max_x1(z) * best_mass + _inter_max_x2(z) * best_mass ** 2
+    min_fb, max_fb = get_limits(SO, z, 10 ** best_mass)
 
     out_min = f_b < min_fb
     out_max = f_b > max_fb
