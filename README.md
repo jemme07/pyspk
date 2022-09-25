@@ -39,6 +39,8 @@ k, sup = spk.sup_model(SO=200, z=z, fb_a=fb_a, fb_pow=fb_pow, k_max=10)
 
 ```
 
+A jupyter notebook with more examples can be found within this [repository](https://github.com/jemme07/pyspk/blob/main/examples/pySPk_Examples.ipynb). 
+
 
 ### Acknowledging the code
 
