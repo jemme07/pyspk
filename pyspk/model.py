@@ -235,13 +235,48 @@ def _get_params(SO, z):
     return params
 
 
+def _akino(alpha, beta, gamma, m_halo, z, cosmo):
+    """
+    Returns a redshift dependent power-law function of the baryon fraction as a function of halo mass 
+    as in Akino et al. 2022
+
+    Parameters
+    ----------
+    alpha : float
+        sets the power law constant
+    beta : float
+        sets the power law exponent
+    gamma : float
+        sets power law redshift dependence. 
+    m_halo: array of float
+        halo mass in M_sun units
+    z : float
+        redshift z
+    cosmo: astropy cosmology object
+        astropy cosmology object with the desired cosmology
+        
+    Returns
+    -------
+    output: array of float
+        baryon fraction normalised by the Universal baryon fraction: f_b / (Omega_b / Omega_m)
+    """
+
+    A = _np.exp(alpha) / 100
+    B = _np.power(m_halo / 1e14, beta - 1)
+    C = _np.power(cosmo.efunc(z) / cosmo.efunc(0.3), gamma)
+
+    return A * B * C
+
+
 def sup_model(SO, z, fb_a=None, fb_pow=None, fb_pivot=1, M_halo=None, fb=None, extrapolate=False,
-              k_min=0.1, k_max=8, n=100, errors=False, verbose=False):
+              alpha=None, beta=None, gamma=None, cosmo=None, k_min=0.1, k_max=8, n=100, 
+              errors=False, verbose=False):
     """
     Returns the suppression of the total matter power spectrum as a function of scale 'k' using the SP(k) model.
     Automatically selects the required optimal mass as a function of scale and redshift. Requires the baryon 
     fraction - halo mass relation, either by specifying power-law fitting parameters, or non-parametric 
-    proving arrays with fb and M_halo at a specific redshift. If a non-parametric relation is given, an 
+    proving arrays with fb and M_halo at a specific redshift. The function accepts a simple power law form 
+    or an Akino et al 2022 fucntional form. If a non-parametric relation is given, an 
     interpolator is used to compute fb at the optimal mass. 
 
     Parameters
@@ -252,7 +287,7 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_pivot=1, M_halo=None, fb=None, e
         redshift z. Only accepts values of z <= 3
     fb_a : float, optional
         power law constant
-    fb_pow : float, option
+    fb_pow : float, optional
         power law exponent
     fb_pivot : float, optional, default 1
         power law pivot point. 
@@ -264,6 +299,14 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_pivot=1, M_halo=None, fb=None, e
         For interpolation, out-of-bounds points return NaNs.
     extrapolate: boolean, default False
         Whether to extrapolate to out-of-bounds points based on first and last intervals, or to return NaNs.
+    alpha : float, optional
+        sets the Akino power law constant
+    beta : float, optional
+        sets the Akino power law exponent
+    gamma : float, optional
+        sets the Akino power law redshift dependence. 
+    cosmo: astropy cosmology object, optional
+        astropy cosmology object with the desired cosmology
     k_min : float, default 0.1
         minimum co-moving wavenumber in units [h/Mpc]
     k_max : float, default 8, max 12
@@ -332,7 +375,7 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_pivot=1, M_halo=None, fb=None, e
         except:
             raise Exception('\033[91mWhen using a power-law, both parameters should be given. '
                             'Please specify: fb_a and fb_pow \033[0m') from None
-    else:
+    elif M_halo or fb:
         if verbose:
             print('\033[36mUsing binned data for fb - M_halo at z=%.3f \033[0m' % z)
         try:
@@ -344,6 +387,15 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_pivot=1, M_halo=None, fb=None, e
             raise Exception('\033[91mWhen using binned data, both halo mass and baryon '
                             'fraction should be given as monotonically increasing arrays. '
                             'Please specify: M_halo (array) and fb (array). \033[0m')
+    else:
+        if verbose:
+            print('\033[36mUsing an Akino et al. 2022 power-law fit for fb ' 
+                  '- M_halo at z=%.3f. \033[0m' % z)
+        try:
+            f_b = _akino(alpha, beta, gamma, 10 ** best_mass, z, cosmo)
+        except:
+            raise Exception('\033[91mUsing an Akino power-law. '
+                            'Please specify: alpha, beta, gamma, and cosmology (cosmo) \033[0m') from None
 
     min_fb, max_fb = get_limits(SO, z, 10 ** best_mass)
 
