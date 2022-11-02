@@ -27,42 +27,43 @@ The --user flag may be required if you do not have root privileges.
 
 ## Usage
 
-
-py-SP(k) is not restrictive to a particular shape of the baryon fraction – halo mass relation, and in order to provide flexibility to the user, we have implemented 3 different method to provide the $f_b$ - $M_\mathrm{halo}$ relation to the mode.
+py-SP(k) is not restrictive to a particular shape of the baryon fraction – halo mass relation, and in order to provide flexibility to the user, we have implemented 3 different method to provide the $f_b$ - $M_\mathrm{halo}$ relation to the mode. In the following sections we describe these implementations. A jupyter notebook with more detailed examples can be found within this [repository](https://github.com/jemme07/pyspk/blob/main/examples/pySPk_Examples.ipynb). 
 
 ### Method 1: Using a power-law fit to the $f_b$ - $M_\mathrm{halo}$ relation
 
 py-SP(k) can be provided with power-law fitted parameters to the $f_b$ - $M_\mathrm{halo}$ relation using the functional form:
 
-$$f_b/(\Omega_b/\Omega_m)=a\left(\frac{M_{200c}}{f_{b,\mathrm{pivot}}\mathrm{M}_\odot}\right)^{b}$$
+$$f_b/(\Omega_b/\Omega_m)=a\left(\frac{M_{200c}}{M_{\mathrm{pivot}}\mathrm{M}_ \odot}\right)^{b}$$
 
-The power-law can be normalised at any pivot point in units of $\mathrm{M}_ {\odot}$. If a pivot point is not given, `spk.sup_model()` uses a default pivot point of $M_\mathrm{halo} = 1 \mathrm{M}_\odot$.  
+The power-law can be normalised at any pivot point in units of $\mathrm{M}_ {\odot}$. If a pivot point is not given, `spk.sup_model()` uses a default pivot point of $M_{\mathrm{pivot}} = 1 \mathrm{M}_ \odot$.  
 
-
-### Method 2: Redshift-dependent power-law fit to the $f_b$ - $M_\mathrm{halo}$ relation. 
-
-We have implemented 
-
-
-A simple example:
+A simple example using power-law fit parameters:
 
 ```
 import pyspk as spk
 
 z = 0.125
-fb_a = 8.44e-05
-fb_pow = 0.275
-k, sup = spk.sup_model(SO=200, z=z, fb_a=fb_a, fb_pow=fb_pow, k_max=10)
+fb_a = 0.4
+fb_pow = 0.3
+fb_pivot = 10 ** 13.5
+
+k, sup = spk.sup_model(SO=200, z=z, fb_a=fb_a, fb_pow=fb_pow, fb_pivot=fb_pivot)
 
 ```
 
-A jupyter notebook with more examples can be found within this [repository](https://github.com/jemme07/pyspk/blob/main/examples/pySPk_Examples.ipynb). 
+### Method 2: Redshift-dependent power-law fit to the $f_b$ - $M_\mathrm{halo}$ relation. 
+
+For the mass range that can be relatively well probed in current X-ray and Sunyaev-Zel'dovich effect observations (roughly $10^{13} M_{500c} [\mathrm{M}_ \odot] 10^15$), the total baryon fraction of haloes can be roughly approximated by a power-law with constant slope (e.g. Mulroy et al. 2019; Akino et al. 2022). Akino et al. 2022 determined the of the baryon budget for X-ray-selected galaxy groups and clusters using weak-lensing mass measurements. They provide a parametric redshift-dependent power-law fit to the gas mass - halo mass and stellar mass - halo mass relations, finding very little redshift evolution. 
+
+We implemented a modified version of the functional form presented in Akino et al. 2022, to fit the total $f_b$ - $M_\mathrm{halo}$ relation as follows:
+
+$$f_b/(\Omega_b/\Omega_m)=\frac{e^\alpha}{100} \left(\frac{M_{500}{10^{14} \mathrm{M}_ \odot$}\right)^{\beta - 1} \left(\frac{E(z)}{E(0.3)}\right)^{\gamma}$$,
+
 
 
 ## Acknowledging the code
 
-Please cite spk using:
-
+Please cite py-SP(k) using:
 
 ```
 @ARTICLE{spk,
