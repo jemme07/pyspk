@@ -60,7 +60,7 @@ $$f_b/(\Omega_b/\Omega_m)=\frac{e^\alpha}{100} \left(\frac{M_{500}}{10^{14} \mat
 
 where $\alpha$ sets the power-law normalisation, $\beta$ sets power-law slope, $\gamma$ provides the redshift dependence and $E(z)$ is the usual dimensionless Hubble parameter. For simplicity, we use the cosmology implementation of `astropy` to derive the redshift evolution in py-SP(k).
 
-In the following example we use the redshift-dependent power-law fit parameters with a flat $\Lambda $CDM cosmology. Note that any `astropy` cosmology could be used instead.
+In the following example we use the redshift-dependent power-law fit parameters with a flat $ \Lambda$CDM cosmology. Note that any `astropy` cosmology could be used instead.
 
 ```
 import pyspk.model as spk
