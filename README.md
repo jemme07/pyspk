@@ -48,7 +48,6 @@ fb_pow = 0.3
 fb_pivot = 10 ** 13.5
 
 k, sup = spk.sup_model(SO=200, z=z, fb_a=fb_a, fb_pow=fb_pow, fb_pivot=fb_pivot)
-
 ```
 
 ### Method 2: Redshift-dependent power-law fit to the $f_b$ - $M_\mathrm{halo}$ relation. 
@@ -57,7 +56,29 @@ For the mass range that can be relatively well probed in current X-ray and Sunya
 
 We implemented a modified version of the functional form presented in Akino et al. 2022, to fit the total $f_b$ - $M_\mathrm{halo}$ relation as follows:
 
-$$f_b/(\Omega_b/\Omega_m)=\frac{e^\alpha}{100} \left(\frac{M_{500}}{10^{14} \mathrm{M}_ \odot}\right)^{\beta - 1} \left(\frac{E(z)}{E(0.3)}\right)^{\gamma}$$,
+$$f_b/(\Omega_b/\Omega_m)=\frac{e^\alpha}{100} \left(\frac{M_{500}}{10^{14} \mathrm{M}_ \odot}\right)^{\beta - 1} \left(\frac{E(z)}{E(0.3)}\right)^{\gamma},$$
+
+where $\alpha$ sets the power-law normalisation, $\beta$ sets power-law slope, $\gamma$ provides the redshift dependence and $E(z)$ is the usual dimensionless Hubble parameter. For simplicity, we use the cosmology implementation of `astropy` to derive the redshift evolution in py-SP(k).
+
+In the following example we use the redshift-dependent power-law fit parameters with a flat $\Lambda$CDM cosmology. Note that any `astropy` cosmology could be used instead.
+
+```
+import pyspk.model as spk
+from astropy.cosmology import FlatLambdaCDM
+
+H0 = 70 
+Omega_b = 0.0463
+Omega_m = 0.2793
+
+cosmo = FlatLambdaCDM(H0=H0, Om0=Omega_m, Ob0=Omega_b) 
+
+alpha = 4.189
+beta = 1.273
+gamma = 0.298
+z = 0.5
+
+k, sup = spk.sup_model(SO=500, z=z, alpha=alpha, beta=beta, gamma=gamma, cosmo=cosmo)
+```
 
 
 
