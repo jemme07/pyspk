@@ -28,13 +28,22 @@ The --user flag may be required if you do not have root privileges.
 ## Usage
 
 
-### Example 1: Using a power-law fit to the $f_b$ - $M_\mathrm{halo}$ relation
+py-SP(k) is not restrictive to a particular shape of the baryon fraction – halo mass relation, and in order to provide flexibility to the user, we have implemented 3 different method to provide the $f_b$ - $M_\mathrm{halo}$ relation to the mode.
 
-In our first example, we will provide py-SP(k) with the (approximate)power-law fitted parameters to the fiducial BAHAMAS simulations ([McCarthy et al. 2017](https://academic.oup.com/mnras/article/465/3/2936/2417021)) at redshift $z=0.125$. We will use a spherical-overdensity of 200 times the critical density of the Universe. The functional form used is:
+### Method 1: Using a power-law fit to the $f_b$ - $M_\mathrm{halo}$ relation
 
-$$f_b / (\Omega_b/\Omega_m) = a \left(\frac{M_{200c}}{10^{13.5}\mathrm{M}_\odot} \right)^{b}$$
+py-SP(k) can be provided with power-law fitted parameters to the $f_b$ - $M_\mathrm{halo}$ relation using the functional form:
 
-For this example, the power-law has been normalised at pivot point of $M_\mathrm{halo} = 10^{13.5} \mathrm{M}_\odot$. If a pivot point is not given `spk.sup_model()` a default pivot point of $M_\mathrm{halo} = 1 \mathrm{M}_\odot$ will be assumed.  
+$$f_b/(\Omega_b/\Omega_m)=a\left(\frac{M_{200c}}{f_{b,\mathrm{pivot}}\mathrm{M}_\odot}\right)^{b}$$
+
+The power-law can be normalised at any pivot point in units of $\mathrm{M}_\odot$. If a pivot point is not given, `spk.sup_model()` uses a default pivot point of $M_\mathrm{halo} = 1 \mathrm{M}_\odot$.  
+
+
+### Method 2: Redshift-dependent power-law fit to the $f_b$ - $M_\mathrm{halo}$ relation. 
+
+We have implemented 
+
+
 A simple example:
 
 ```
