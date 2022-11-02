@@ -57,7 +57,7 @@ For the mass range that can be relatively well probed in current X-ray and Sunya
 
 We implemented a modified version of the functional form presented in Akino et al. 2022, to fit the total $f_b$ - $M_\mathrm{halo}$ relation as follows:
 
-$$f_b/(\Omega_b/\Omega_m)=\frac{e^\alpha}{100} \left(\frac{M_{500}{10^{14} \mathrm{M}_ \odot$}\right)^{\beta - 1} \left(\frac{E(z)}{E(0.3)}\right)^{\gamma}$$,
+$$f_b/(\Omega_b/\Omega_m)=\frac{e^\alpha}{100} \left(\frac{M_{500}}{10^{14} \mathrm{M}_ \odot}\right)^{\beta - 1} \left(\frac{E(z)}{E(0.3)}\right)^{\gamma}$$,
 
 
 
