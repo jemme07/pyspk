@@ -261,11 +261,12 @@ def _akino(alpha, beta, gamma, m_halo, z, cosmo):
         baryon fraction normalised by the Universal baryon fraction: f_b / (Omega_b / Omega_m)
     """
 
-    A = _np.exp(alpha) / 100
-    B = _np.power(m_halo / 1e14, beta - 1)
-    C = _np.power(cosmo.efunc(z) / cosmo.efunc(0.3), gamma)
+    A = 0.1658 / (cosmo.Ob0 / cosmo.Om0)
+    B = _np.exp(alpha) / 100
+    C = _np.power(m_halo / 1e14, beta - 1)
+    D = _np.power(cosmo.efunc(z) / cosmo.efunc(0.3), gamma)
 
-    return A * B * C
+    return A * B * C * D
 
 
 def sup_model(SO, z, fb_a=None, fb_pow=None, fb_pivot=1, M_halo=None, fb=None, extrapolate=False,
@@ -359,6 +360,10 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_pivot=1, M_halo=None, fb=None, e
     if k_max > 8:
         _warnings.warn('\033[33mScales with k_max > k_ny = 8 [h/Mpc] '
                        'may not be accurately reproduced by the model. \033[0m', stacklevel=2)
+
+    if cosmo:
+        if not cosmo.Ob0:
+            raise Exception('\033[91mIncorrect cosmology. Please specify Omega_baryon.\033[0m') from None
 
     params = _get_params(SO, z)
     k = _np.round(_np.logspace(_np.log10(k_min), _np.log10(k_max), n), 6)

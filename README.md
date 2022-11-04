@@ -56,11 +56,11 @@ For the mass range that can be relatively well probed in current X-ray and Sunya
 
 We implemented a modified version of the functional form presented in Akino et al. 2022, to fit the total $f_b$ - $M_\mathrm{halo}$ relation as follows:
 
-$$f_b/(\Omega_b/\Omega_m)=\frac{e^\alpha}{100} \left(\frac{M_{500}}{10^{14} \mathrm{M}_ \odot}\right)^{\beta - 1} \left(\frac{E(z)}{E(0.3)}\right)^{\gamma},$$
+$$f_b/(\Omega_b/\Omega_m)= \frac{0.1658}{(\Omega_b/\Omega_m)} \frac{e^\alpha}{100} \left(\frac{M_{500}}{10^{14} \mathrm{M}_ \odot}\right)^{\beta - 1} \left(\frac{E(z)}{E(0.3)}\right)^{\gamma},$$
 
 where $\alpha$ sets the power-law normalisation, $\beta$ sets power-law slope, $\gamma$ provides the redshift dependence and $E(z)$ is the usual dimensionless Hubble parameter. For simplicity, we use the cosmology implementation of `astropy` to derive the redshift evolution in py-SP(k).
 
-In the following example we use the redshift-dependent power-law fit parameters with a flat $ \Lambda$CDM cosmology. Note that any `astropy` cosmology could be used instead.
+In the following example we use the redshift-dependent power-law fit parameters with a flat LambdaCDM cosmology. Note that any `astropy` cosmology could be used instead.
 
 ```
 import pyspk.model as spk
@@ -80,6 +80,12 @@ z = 0.5
 k, sup = spk.sup_model(SO=500, z=z, alpha=alpha, beta=beta, gamma=gamma, cosmo=cosmo)
 ```
 
+### Method 3: Binned data for the $f_b$ - $M_\mathrm{halo}$ relation. 
+
+The final, and most flexible method is to provide py-SP(k) with the baryon fraction binned in bins of halo mass. This could be, for example, obtained from observational constraints, measured directly form simulations, or sampled from a predefined distribution or functional form. For an example using data obtained from the BAHAMAS simulations ([McCarthy et al. 2017](https://academic.oup.com/mnras/article/465/3/2936/2417021)), please refer to the [examples](https://github.com/jemme07/pyspk/blob/main/examples/pySPk_Examples.ipynb) provided. 
+
+
+## Priors
 
 
 ## Acknowledging the code
