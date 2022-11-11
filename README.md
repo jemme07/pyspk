@@ -35,9 +35,7 @@ py-SP(k) can be provided with power-law fitted parameters to the $f_b$ - $M_\mat
 
 $$f_b/(\Omega_b/\Omega_m)=a\left(\frac{M_{200c\mathrm{ or }500c}}{M_{\mathrm{pivot}}\mathrm{M}_ \odot}\right)^{b},$$
 
-where $a$ is the normalisation of the $f_b$ - $M_\mathrm{halo}$ relation at $M_\mathrm{pivot}$, and $b$ is the power-law slope. 
-
-The power-law can be normalised at any pivot point in units of $\mathrm{M}_ {\odot}$. If a pivot point is not given, `spk.sup_model()` uses a default pivot point of $M_{\mathrm{pivot}} = 1 \mathrm{M}_ \odot$. $a$, $b$ and $M_{\mathrm{pivot}$ can be specified at each redshift independently.  
+where $a$ is the normalisation of the $f_b$ - $M_\mathrm{halo}$ relation at $M_\mathrm{pivot}$, and $b$ is the power-law slope. The power-law can be normalised at any pivot point in units of $\mathrm{M}_ {\odot}$. If a pivot point is not given, `spk.sup_model()` uses a default pivot point of $M_{\mathrm{pivot}} = 1 \mathrm{M}_ \odot$. $a$, $b$ and $M_\mathrm{pivot}$ can be specified at each redshift independently.  
 
 Next, we show a simple example using power-law fit parameters:
 
