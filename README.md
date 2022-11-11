@@ -105,9 +105,19 @@ A less conservative approach could be to use a flat priors over the entire range
 
 | Parameter   | Description        | Prior           |
 | ----------- | ------------------ | --------------- |
-| $\alpha$    | Normaliasation     | U(4.189, 0.066) |
-| $\beta$     | Slope              | U(1.273, 0.044) |
-| $\gamma$    | Redshift evolution | U(0.298, 0.063) |
+| $\alpha$    | Normaliasation     | U(4.060, 4.306) |
+| $\beta$     | Slope              | U(1.199, 1.347) |
+| $\gamma$    | Redshift evolution | U(0.159, 0.414) |
+
+where U(x, y) is a uniform distribution over [x, y]. 
+
+Finally, the full range of fitted parameters spanned by our simulations, regardless of whether or not they agree with observational constraints is:
+
+| Parameter   | Description        | Prior           |
+| ----------- | ------------------ | --------------- |
+| $\alpha$    | Normaliasation     | U(3.060, 4.508) |
+| $\beta$     | Slope              | U(0.989, 1.620) |
+| $\gamma$    | Redshift evolution | U(0.046, 0.631) |
 
 where U(x, y) is a uniform distribution over [x, y]. 
 
