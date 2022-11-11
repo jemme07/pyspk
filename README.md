@@ -89,7 +89,7 @@ The final, and most flexible method is to provide py-SP(k) with the baryon fract
 
 ## Priors
 
-While py-SP(k) was calibrated using a wide range of sub-grid feedback parameters, some applications may require a more limited range of baryon fractions that encompass current observational constraints. For such applications, we used the gas mass - halo mass and stellar mass - halo mass constraints from Table 5 in Akino et al. 2022, and find the subset of simulations from our 400 models that agree with the inferred baryon budget at redshift $z=0.1$. We note that we constrained our simulations to within a normalisation of $\pm \, 3 \times \simga$ at $M_{500c} = 10^{14} \mathrm{M}_ \odot$. 
+While py-SP(k) was calibrated using a wide range of sub-grid feedback parameters, some applications may require a more limited range of baryon fractions that encompass current observational constraints. For such applications, we used the gas mass - halo mass and stellar mass - halo mass constraints from Table 5 in Akino et al. 2022, and find the subset of simulations from our 400 models that agree with the inferred baryon budget at redshift $z=0.1$. We note that we constrained our simulations to within a normalisation of $\pm 3 \times \sigma$ at $M_{500c} = 10^{14} \mathrm{M}_ \odot$. 
 
 Using the simulations that fall within these constraints, we can impose observational priors for the redshift-dependent power-law fitting parameters for the $f_b$ - $M_\mathrm{halo}$ relation in Method 3 as follows:
 
