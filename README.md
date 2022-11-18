@@ -33,7 +33,7 @@ py-SP(k) is not restrictive to a particular shape of the baryon fraction – hal
 
 py-SP(k) can be provided with power-law fitted parameters to the $f_b$ - $M_\mathrm{halo}$ relation using the functional form:
 
-$$f_b/(\Omega_b/\Omega_m)=a\left(\frac{M_{SO}{M_{\mathrm{pivot}}\mathrm{M}_ \odot}\right)^{b},$$
+$$f_b/(\Omega_b/\Omega_m)=a\left(\frac{M_{SO}}{M_{\mathrm{pivot}}\mathrm{M}_ \odot}\right)^{b},$$
 
 where $M_{SO}$ could be either $M_{200c}$ or $M_{500c}$, $a$ is the normalisation of the $f_b$ - $M_\mathrm{halo}$ relation at $M_\mathrm{pivot}$, and $b$ is the power-law slope. The power-law can be normalised at any pivot point in units of $\mathrm{M}_ {\odot}$. If a pivot point is not given, `spk.sup_model()` uses a default pivot point of $M_{\mathrm{pivot}} = 1 \mathrm{M}_ \odot$. $a$, $b$ and $M_\mathrm{pivot}$ can be specified at each redshift independently.  
 
