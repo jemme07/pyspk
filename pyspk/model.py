@@ -361,7 +361,7 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_pivot=1, M_halo=None, fb=None, e
         _warnings.warn('\033[33mScales with k_max > k_ny = 8 [h/Mpc] '
                        'may not be accurately reproduced by the model. \033[0m', stacklevel=2)
 
-    if cosmo:
+    if cosmo is not None:
         if not cosmo.Ob0:
             raise Exception('\033[91mIncorrect cosmology. Please specify Omega_baryon.\033[0m') from None
 
@@ -371,7 +371,7 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_pivot=1, M_halo=None, fb=None, e
 
     best_mass = _optimal_mass_funct(k, params)
 
-    if fb_a or fb_pow:
+    if (fb_a is not None) or (fb_pow is not None):
         if verbose:
             print('\033[36mUsing power-law fit for fb - M_halo at z=%.3f, ' 
                   'normalised at M_halo = %.2e [M_sun] \033[0m' % (z, fb_pivot))
@@ -380,7 +380,7 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_pivot=1, M_halo=None, fb=None, e
         except:
             raise Exception('\033[91mWhen using a power-law, both parameters should be given. '
                             'Please specify: fb_a and fb_pow \033[0m') from None
-    elif M_halo or fb:
+    elif (M_halo is not None) or (fb is not None):
         if verbose:
             print('\033[36mUsing binned data for fb - M_halo at z=%.3f \033[0m' % z)
         try:
