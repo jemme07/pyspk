@@ -52,15 +52,15 @@ k, sup = spk.sup_model(SO=200, z=z, fb_a=fb_a, fb_pow=fb_pow, fb_pivot=fb_pivot)
 
 ### Method 2: Redshift-dependent power-law fit to the $f_b$ - $M_\mathrm{halo}$ relation. 
 
-For the mass range that can be relatively well probed in current X-ray and Sunyaev-Zel'dovich effect observations (roughly $10^{13} \leq M_{500c} [\mathrm{M}_ \odot] \leq 10^{15}$), the total baryon fraction of haloes can be roughly approximated by a power-law with constant slope (e.g. Mulroy et al. 2019; Akino et al. 2022). Akino et al. 2022 determined the of the baryon budget for X-ray-selected galaxy groups and clusters using weak-lensing mass measurements. They provide a parametric redshift-dependent power-law fit to the gas mass - halo mass and stellar mass - halo mass relations, finding very little redshift evolution. 
+For the mass range that can be relatively well probed in current X-ray and Sunyaev-Zel'dovich effect observations (roughly $10^{13} \leq M_{500c} [\mathrm{M}_ \odot] \leq 10^{15}$), the total baryon fraction of haloes can be roughly approximated by a power-law with constant slope (e.g. Mulroy et al. 2019; Akino et al. 2022). Akino et al. (2022) determined the of the baryon budget for X-ray-selected galaxy groups and clusters using weak-lensing mass measurements. They provide a parametric redshift-dependent power-law fit to the gas mass - halo mass and stellar mass - halo mass relations, finding very little redshift evolution. 
 
-We implemented a modified version of the functional form presented in Akino et al. 2022, to fit the total $f_b$ - $M_\mathrm{halo}$ relation as follows:
+We implemented a modified version of the functional form presented in Akino et al. (2022), to fit the total $f_b$ - $M_\mathrm{halo}$ relation as follows:
 
 $$f_b/(\Omega_b/\Omega_m)= \left(\frac{0.1658}{\Omega_b/\Omega_m}\right) \left(\frac{e^\alpha}{100}\right) \left(\frac{M_{500c}}{10^{14} \mathrm{M}_ \odot}\right)^{\beta - 1} \left(\frac{E(z)}{E(0.3)}\right)^{\gamma},$$
 
 where $\alpha$ sets the power-law normalisation, $\beta$ sets power-law slope, $\gamma$ provides the redshift dependence and $E(z)$ is the usual dimensionless Hubble parameter. For simplicity, we use the cosmology implementation of `astropy` to specify the cosmological parameters in py-SP(k).
 
-Note that this power-law has a normalisation that is redshift dependent, while the the slop is constant in redshift. While this provides a less flexible approach compared with Methods 1 (simple power-law) and Method 3 (binned data), we find that this parametrisation agrees well with our simulations up to redshift $z=1$, which is the redshift range proved by Akino et al. 2022. For higher redshifts, we find that simulations require a mass-dependent slope, especially at the lower mass range required to predict the suppression of the total matter power spectrum at such redshifts. 
+Note that this power-law has a normalisation that is redshift dependent, while the the slope is constant in redshift. While this provides a less flexible approach compared with Methods 1 (simple power-law) and Method 3 (binned data), we find that this parametrisation agrees well with our simulations up to redshift $z=1$, which is the redshift range proved by Akino et al. (2022). For higher redshifts, we find that simulations require a mass-dependent slope, especially at the lower mass range required to predict the suppression of the total matter power spectrum at such redshifts. 
 
 In the following example we use the redshift-dependent power-law fit parameters with a flat LambdaCDM cosmology. Note that any `astropy` cosmology could be used instead.
 
@@ -89,9 +89,9 @@ The final, and most flexible method is to provide py-SP(k) with the baryon fract
 
 ## Priors
 
-While py-SP(k) was calibrated using a wide range of sub-grid feedback parameters, some applications may require a more limited range of baryon fractions that encompass current observational constraints. For such applications, we used the gas mass - halo mass and stellar mass - halo mass constraints from the fits in Table 5 in Akino et al. 2022, and find the subset of simulations from our 400 models that agree to with $\pm 2 \times \sigma$ of the inferred baryon budget at redshift $z=0.1$. 
+While py-SP(k) was calibrated using a wide range of sub-grid feedback parameters, some applications may require a more limited range of baryon fractions that encompass current observational constraints. For such applications, we used the gas mass - halo mass and stellar mass - halo mass constraints from the fits in Table 5 in Akino et al. (2022), and find the subset of simulations from our 400 models that agree to with $\pm 2 \times \sigma$ of the inferred baryon budget at redshift $z=0.1$. 
 
-Using the simulations that fall within these constraints, we can impose observational priors for the redshift-dependent power-law fitting parameters for the $f_b$ - $M_\mathrm{halo}$ relation in Method 3 as follows:
+Using the simulations that fall within these constraints, we can impose observational priors for the redshift-dependent power-law fitting parameters for the $f_b$ - $M_\mathrm{halo}$ relation in Method 2 as follows:
 
 | Parameter   | Description        | Prior           |
 | ----------- | ------------------ | --------------- |
