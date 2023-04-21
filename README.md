@@ -89,9 +89,11 @@ The final, and most flexible method is to provide py-SP(k) with the baryon fract
 
 ## Priors
 
-While py-SP(k) was calibrated using a wide range of sub-grid feedback parameters, some applications may require a more limited range of baryon fractions that encompass current observational constraints. For such applications, we used the gas mass - halo mass and stellar mass - halo mass constraints from the fits in Table 5 in Akino et al. (2022), and find the subset of simulations from our 400 models that agree to with $\pm 2 \times \sigma$ of the inferred baryon budget at redshift $z=0.1$. 
+While py-SP(k) was calibrated using a wide range of sub-grid feedback parameters, some applications may require a more limited range of baryon fractions that encompass current observational constraints. For such applications, we used the gas mass - halo mass and stellar mass - halo mass constraints from the fits in Table 5 in Akino et al. (2022), and find the subset of simulations from our 400 models that agree to within $\pm 2$ or $3 \times \sigma$ of the inferred baryon budget at redshift $z=0.1$. 
 
-Using the simulations that fall within these constraints, we can impose observational priors for the redshift-dependent power-law fitting parameters for the $f_b$ - $M_\mathrm{halo}$ relation in Method 2 as follows:
+Using the simulations that fall within these constraints, we can impose observational priors for the redshift-dependent power-law fitting parameters for the $f_b$ - $M_\mathrm{halo}$ relation in Method 2.
+
+Parameters for simulations that fall within $\pm 2 \times \sigma$ of the inferred baryon budget:
 
 | Parameter   | Description        | Prior           |
 | ----------- | ------------------ | --------------- |
@@ -101,6 +103,15 @@ Using the simulations that fall within these constraints, we can impose observat
 
 where G(x, y) is a Gaussian distribution with center x and width y.
 
+Parameters for simulations that fall within $\pm 3 \times \sigma$ of the inferred baryon budget:
+
+| Parameter   | Description        | Prior           |
+| ----------- | ------------------ | --------------- |
+| $\alpha$    | Normaliasation     | G(4.25, 0.09) |
+| $\beta$     | Slope              | G(1.25, 0.06) |
+| $\gamma$    | Redshift evolution | G(0.39, 0.10) |
+
+where G(x, y) is a Gaussian distribution with center x and width y.
 
 ## Acknowledging the code
 
