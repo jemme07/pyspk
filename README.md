@@ -97,21 +97,21 @@ Priors inferred from simulations that fall within $\pm 2 \times \sigma$ of the i
 
 | Parameter   | Description        | Prior           |
 | ----------- | ------------------ | --------------- |
-| $\alpha$    | Normaliasation     | G(4.24, 0.05) |
-| $\beta$     | Slope              | G(1.22, 0.03) |
-| $\gamma$    | Redshift evolution | G(0.34, 0.07) |
+| $\alpha$    | Normaliasation     | $\mathcal{N}$(4.24, 0.05) |
+| $\beta$     | Slope              | $\mathcal{N}$(1.22, 0.03) |
+| $\gamma$    | Redshift evolution | $\mathcal{N}$(0.34, 0.07) |
 
-where G(x, y) is a Gaussian distribution with center x and width y.
+where $\mathcal{N}(\mu,\sigma)$ is a Gaussian distribution with mean $\mu$ and standard deviation $\sigma$.
 
 Priors inferred from simulations that fall within $\pm 3 \times \sigma$ of the inferred baryon budget:
 
 | Parameter   | Description        | Prior           |
 | ----------- | ------------------ | --------------- |
-| $\alpha$    | Normaliasation     | G(4.25, 0.09) |
-| $\beta$     | Slope              | G(1.25, 0.06) |
-| $\gamma$    | Redshift evolution | G(0.39, 0.10) |
+| $\alpha$    | Normaliasation     | $\mathcal{N}$(4.25, 0.09) |
+| $\beta$     | Slope              | $\mathcal{N}$(1.25, 0.06) |
+| $\gamma$    | Redshift evolution | $\mathcal{N}$(0.39, 0.10) |
 
-where G(x, y) is a Gaussian distribution with center x and width y.
+where $\mathcal{N}(\mu,\sigma)$ is a Gaussian distribution with mean $\mu$ and standard deviation $\sigma$.
 
 ## Acknowledging the code
 
