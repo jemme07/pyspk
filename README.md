@@ -60,7 +60,7 @@ $$f_b/(\Omega_b/\Omega_m)= \left(\frac{0.1658}{\Omega_b/\Omega_m}\right) \left(\
 
 where $\alpha$ sets the power-law normalisation, $\beta$ sets power-law slope, $\gamma$ provides the redshift dependence and $E(z)$ is the usual dimensionless Hubble parameter. For simplicity, we use the cosmology implementation of `astropy` to specify the cosmological parameters in py-SP(k).
 
-Note that this power-law has a normalisation that is redshift dependent, while the the slope is constant in redshift. While this provides a less flexible approach compared with Methods 1 (simple power-law) and Method 3 (binned data), we find that this parametrisation agrees well with our simulations up to redshift $z=1$, which is the redshift range proved by Akino et al. (2022). For higher redshifts, we find that simulations require a mass-dependent slope, especially at the lower mass range required to predict the suppression of the total matter power spectrum at such redshifts. 
+Note that this power-law has a normalisation that is redshift dependent, while the the slope is constant in redshift. While this provides a less flexible approach compared with Methods 1 (simple power-law) and Method 3 (binned data), we find that this parametrisation provides a reasonable agreement with our simulations up to redshift $z=1$, which is the redshift range proved by Akino et al. (2022). For higher redshifts, we find that simulations require a mass-dependent slope, especially at the lower mass range required to predict the suppression of the total matter power spectrum at such redshifts. 
 
 In the following example we use the redshift-dependent power-law fit parameters with a flat LambdaCDM cosmology. Note that any `astropy` cosmology could be used instead.
 
@@ -89,17 +89,17 @@ The final, and most flexible method is to provide py-SP(k) with the baryon fract
 
 ## Priors
 
-While py-SP(k) was calibrated using a wide range of sub-grid feedback parameters, some applications may require a more limited range of baryon fractions that encompass current observational constraints. For such applications, we used the gas mass - halo mass and stellar mass - halo mass constraints from the fits in Table 5 in Akino et al. (2022), and find the subset of simulations from our 400 models that agree to within $\pm 2$ or $3 \times \sigma$ of the inferred baryon budget at redshift $z=0.1$. 
+While py-SP(k) was calibrated using a wide range of sub-grid feedback parameters, some applications may require a more limited range of baryon fractions that encompass current observational constraints. For such applications, we used the gas mass - halo mass and stellar mass - halo mass constraints from the fits in Table 5 in Akino et al. (2022), and find the subset of simulations from our 400 models that agree to within $\pm 2$ or $3 \times \sigma$ of the inferred baryon budget at redshift $z=0.1$. We note that for our simulations, we include all stellar and gas particles within within a spherical overdensity radius. Hence, in order to make reasonable comparisons with the fits in Akino et al. (2022), we included an additional 15\% contribution to the total stellar masses from the contribution of blue galaxies, and 30\% additional stellar mass to the brightest cluster galaxies (BCGs) to account for the diffuse intracluster light (ICL, see Akino et al. 2022). 
 
-We utilised the simulations satisfying these restrictions to determine the redshift-dependent power-law parameters for the $f_b$ - $M_\mathrm{halo}$ relation up to redshift $z=1$ (Method 2), and then utilised these parameters to infer suitable priors.
+We utilised the simulations satisfying these restrictions to determine the redshift-dependent power-law parameters for the $f_b$ - $M_\mathrm{halo}$ relation up to redshift $z=1$ (Method 2), and then utilised these parameters to infer suitable priors. We limited the fitting range to $6 \times 10^{12} \leq M_{500c} [\mathrm{M}_ \odot] \leq 10^{14}$. 
 
 Priors inferred from simulations that fall within $\pm 2 \times \sigma$ of the inferred baryon budget:
 
 | Parameter   | Description        | Prior           |
 | ----------- | ------------------ | --------------- |
-| $\alpha$    | Normaliasation     | $\mathcal{N}$(4.24, 0.05) |
-| $\beta$     | Slope              | $\mathcal{N}$(1.22, 0.03) |
-| $\gamma$    | Redshift evolution | $\mathcal{N}$(0.34, 0.07) |
+| $\alpha$    | Normaliasation     | $\mathcal{N}$(4.16, 0.07) |
+| $\beta$     | Slope              | $\mathcal{N}$(1.20, 0.05) |
+| $\gamma$    | Redshift evolution | $\mathcal{N}$(0.39, 0.09) |
 
 where $\mathcal{N}(\mu,\sigma)$ is a Gaussian distribution with mean $\mu$ and standard deviation $\sigma$.
 
@@ -107,9 +107,9 @@ Priors inferred from simulations that fall within $\pm 3 \times \sigma$ of the i
 
 | Parameter   | Description        | Prior           |
 | ----------- | ------------------ | --------------- |
-| $\alpha$    | Normaliasation     | $\mathcal{N}$(4.25, 0.09) |
-| $\beta$     | Slope              | $\mathcal{N}$(1.25, 0.06) |
-| $\gamma$    | Redshift evolution | $\mathcal{N}$(0.39, 0.10) |
+| $\alpha$    | Normaliasation     | $\mathcal{N}$(4.18, 0.12) |
+| $\beta$     | Slope              | $\mathcal{N}$(1.26, 0.08) |
+| $\gamma$    | Redshift evolution | $\mathcal{N}$(0.42, 0.10) |
 
 where $\mathcal{N}(\mu,\sigma)$ is a Gaussian distribution with mean $\mu$ and standard deviation $\sigma$.
 
