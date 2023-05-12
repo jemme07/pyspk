@@ -8,6 +8,7 @@ import pkgutil as _pkgutil
 
 _warnings.filterwarnings("always", category=UserWarning)
 
+
 def _power_law(m_halo, fb_a, fb_pow, fb_pivot=1):
     """
     Simple power-law function fit to the baryon fraction - halo mass relation
@@ -72,7 +73,7 @@ def _optimal_mass_funct(k, params):
     return output
 
 
-def optimal_mass(SO, z, k, verbose=False):
+def optimal_mass(SO, z, k):
     """
     Optimal mass function as a function of scale and redshift for a specific 
     spherical over-density. Defined in eq.(2) in Salcido et al. (2022).
@@ -85,8 +86,6 @@ def optimal_mass(SO, z, k, verbose=False):
         redshift z. Only accepts values of z <= 3
     k : array of float
         co-moving wavenumber in units [h/Mpc]
-    verbose : boolean, default True
-        Run in verbose mode
 
     Returns
     -------
@@ -267,6 +266,32 @@ def _akino(alpha, beta, gamma, m_halo, z, cosmo):
     D = _np.power(cosmo.efunc(z) / cosmo.efunc(0.3), gamma)
 
     return A * B * C * D
+
+
+def __propagate_errors(sup, error, lambda_funct, mu_funct, nu_func, ):
+    """
+    Propagates the suppression uncertainty to the baryon fraction
+
+    Parameters
+    ----------
+    sup: array of float
+        array with the suppression of the total matter power spectrum as a function of scale.
+    lambda_funct : array
+        lambda function for a specific redshift. Defined in eq.(8) in Salcido et al. (2022).
+    mu_funct : array
+        mu function for a specific redshift. Defined in eq.(8) in Salcido et al. (2022).
+    nu_funct : array
+        nu function for a specific redshift. Defined in eq.(8) in Salcido et al. (2022).
+        
+    Returns
+    -------
+    output: array of float
+        array with the error in the baryon fraction. 
+    """
+    A = -1 / nu_func
+    B = error / (lambda_funct - sup)
+
+    return _np.abs(A * B) 
 
 
 def sup_model(SO, z, fb_a=None, fb_pow=None, fb_pivot=1, M_halo=None, fb=None, extrapolate=False,
@@ -453,3 +478,140 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_pivot=1, M_halo=None, fb=None, e
 
     else:
         return k, sup
+
+
+
+def __fb_model(SO, k, sup, z, errors=False):
+    """
+    Returns baryon fraction - halo mass relation from the suppression of the total matter power spectrum 
+    using the SP(k) model. Automatically selects the required optimal mass as a function of scale and redshift. 
+
+    Parameters
+    ----------
+
+    SO : int
+        spherical over-density. Only accepts 200 or 500
+    k: array of float
+        array with the co-moving wavenumber in units [h/Mpc]
+    sup: array of float
+        array with the suppression of the total matter power spectrum as a function of scale
+    z : float
+        redshift z. Only accepts values of z <= 3
+    errors : boolean, default False
+        enables additional output with the bootstrapped 68% and 95% confidence intervals from statistical errors.
+        
+    Returns
+    -------
+    M_halo : array of float, optional
+        array containing the (binned) halo mass for the fb - M-halo relation in M_sun units.
+    fb : array of float, optional
+        array containing the (binned) baryon fraction normalised by the universal baryon fraction: 
+        f_b / (Omega_b / Omega_m) for the fb - M-halo relation.
+
+    error_68_m : array of float, optional
+        array with the -1 sigma confidence interval 
+    error_68_p : array of float, optional
+        array with the +1 sigma confidence interval 
+    error_95_m : array of float, optional
+        array with the -2 sigma confidence interval 
+    error_95_p : array of float, optional
+        array with the +2 sigma confidence interval 
+
+    Notes
+    ----------
+    The maximum co-moving wavenumber in units [h/Mpc] is set to the Nyquist frequency of the Antilles simulations 
+    (see Salcido et al. 2022). Although SP(k) was fitted up to k = 12 [h/Mpc], we caution the user that setting 
+    𝑘 > 𝑘Ny (8 [h/Mpc]) might not be representative of the true uncertainties in the data. 
+    """
+
+    if z < 0:
+        raise Exception('\033[91mIncorrect redshift.\033[0m') from None
+        
+    if z > 3:
+        raise Exception('\033[91mpy-spk was calibrated up to z = 3.0. '
+                        'Please specify z <= 3.0 \033[0m') from None
+
+    if z < 0.125:
+        _warnings.warn('\033[33mpy-spk was calibrated down to z = 0.125. Redshifts '
+                       'z < 0.125 may not be accurately reproduced by the model. \033[0m', stacklevel=2)
+
+    if _np.size(k) > 1:
+        k_max = k.max()
+        k_min = k.min()
+    else:
+        k_max = k
+
+    if k_max > 12:
+        _warnings.warn('\033[91mpy-spk was calibrated up to k_max = 12 [h/Mpc] '
+                        'Using values of k <= 12 [h/Mpc] \033[0m', stacklevel=2)
+        k = k[np.where(k <= 12)]
+        sup = sup[np.where(k <= 12)]
+        
+    if k_max > 8:
+        _warnings.warn('\033[33mScales with k_max > k_ny = 8 [h/Mpc] '
+                       'may not be accurately reproduced by the model. \033[0m', stacklevel=2)
+
+    params = _get_params(SO, z)
+    logk = _np.log10(k)
+    best_mass = _optimal_mass_funct(k, params)
+
+    min_fb, max_fb = get_limits(SO, z, 10 ** best_mass)
+
+    x0 = _lambda_funct(logk, params)
+    x1 = _mu_funct(logk, params)
+    x2 = _nu_func(logk, params)
+
+    f_b = - (1 / x2) * _np.log((x0 - sup) / (x0 - x1))
+
+    if _np.size(k) > 1:
+        out_min = f_b < min_fb
+        out_max = f_b > max_fb
+
+        mass_out_min = best_mass[out_min]
+
+        if any(out_min):
+            _warnings.warn('\033[91mFound baryon fraction values outside fitting limits. '
+                           'fb < lower_limit between %.1e <= M_halo [M_sun] <= %.1e. ' 
+                           'fb_model() will return NaNs within those limits. \033[0m' 
+                           % (10 ** mass_out_min.min(), 10 ** mass_out_min.max()), stacklevel=2)
+
+        mass_out_max = best_mass[out_max]
+
+        if any(out_max):
+            _warnings.warn('\033[91mFound baryon fraction values outside fitting limits. '
+                           'fb > upper_limit between %.1e <= M_halo [M_sun] <= %.1e. ' 
+                           'fb_model() will return NaNs within those limits. \033[0m' 
+                           % (10 ** mass_out_max.min(), 10 ** mass_out_max.max()), stacklevel=2)
+
+        mask = _np.logical_or(out_min,out_max)
+
+        f_b[mask] = _np.NAN
+
+    if errors:
+        print('Errors not implemented yet')
+        return _np.power(10, best_mass), f_b
+        # raw_table = _pkgutil.get_data(__name__, 'stat_errors_' + str (SO) + '.csv').decode('utf-8').splitlines()
+        # table = _np.loadtxt(raw_table, delimiter=",", skiprows=1)
+        # coords = table[:, [0, 1, 2]]
+        # interp_68_m = _LinearNDInterpolator(coords, table[:, 4], rescale=True)
+        # interp_68_p = _LinearNDInterpolator(coords, table[:, 5], rescale=True)
+        # interp_95_m = _LinearNDInterpolator(coords, table[:, 6], rescale=True)
+        # interp_95_p = _LinearNDInterpolator(coords, table[:, 7], rescale=True)
+
+        # z_array = _np.full_like(k, z)
+        # data = _np.column_stack([k, f_b, z_array])
+        # error_68_m = interp_68_m(data)
+        # error_68_p = interp_68_p(data)
+        # error_95_m = interp_95_m(data)
+        # error_95_p = interp_95_p(data)
+
+        # error_68_m = __propagate_errors(sup, error_68_m, _lambda_funct, _mu_funct, _nu_func)
+        # error_68_p = __propagate_errors(sup, error_68_p, _lambda_funct, _mu_funct, _nu_func)
+        # error_95_m = __propagate_errors(sup, error_95_m, _lambda_funct, _mu_funct, _nu_func)
+        # error_95_p = __propagate_errors(sup, error_95_p, _lambda_funct, _mu_funct, _nu_func)
+
+        # return _np.power(10, best_mass), f_b, error_68_m, error_68_p, error_95_m, error_95_p
+
+    else:
+        return _np.power(10, best_mass), f_b
+
