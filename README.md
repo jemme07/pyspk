@@ -118,22 +118,17 @@ where $\mathcal{N}(\mu,\sigma)$ is a Gaussian distribution with mean $\mu$ and s
 Please cite py-SP(k) using:
 
 ```
-@ARTICLE{spk,
-       author = {},
-        title = "{}",
-      journal = {\mnras},
-     keywords = {},
-         year = ,
-        month = ,
-       volume = {},
-       number = {},
-        pages = {},
-          doi = {},
-archivePrefix = {arXiv},
-       eprint = {},
- primaryClass = {astro-ph.CO},
-       adsurl = {},
-      adsnote = {}
+@ARTICLE{SPK_Salcido_2023,
+    author = {Salcido, Jaime and McCarthy, Ian G and Kwan, Juliana and Upadhye, Amol and Font, Andreea S},
+    title = "{SP(k) - A hydrodynamical simulation-based model for the impact of baryon physics on the non-linear matter power spectrum}",
+    journal = {Monthly Notices of the Royal Astronomical Society},
+    year = {2023},
+    month = {05},
+    issn = {0035-8711},
+    doi = {10.1093/mnras/stad1474},
+    url = {https://doi.org/10.1093/mnras/stad1474},
+    note = {stad1474},
+    eprint = {https://academic.oup.com/mnras/advance-article-pdf/doi/10.1093/mnras/stad1474/50356057/stad1474.pdf},
 }
 ```
 For any questions and enquires please contact me via email at *j.salcidonegrete@ljmu.ac.uk*
