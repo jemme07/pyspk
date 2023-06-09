@@ -54,7 +54,7 @@ def _poly_2(x, vals):
 
 def _optimal_mass_funct(k, params):
     """
-    Optimal mass function defined in eq.(2) in Salcido et al. (2022).
+    Optimal mass function defined in eq.(2) in Salcido et al. (2023).
 
     Parameters
     ----------
@@ -75,7 +75,7 @@ def _optimal_mass_funct(k, params):
 def optimal_mass(SO, z, k, verbose=False):
     """
     Optimal mass function as a function of scale and redshift for a specific 
-    spherical over-density. Defined in eq.(2) in Salcido et al. (2022).
+    spherical over-density. Defined in eq.(2) in Salcido et al. (2023).
 
     Parameters
     ----------
@@ -108,7 +108,7 @@ def optimal_mass(SO, z, k, verbose=False):
 
 def _lambda_funct(x, params):
     """
-    lambda function for a specific redshift. Defined in eq.(6) in Salcido et al. (2022).
+    lambda function for a specific redshift. Defined in eq.(6) in Salcido et al. (2023).
 
     Parameters
     ----------
@@ -128,7 +128,7 @@ def _lambda_funct(x, params):
 
 def _mu_funct(x, params):
     """
-    mu function for a specific redshift. Defined in eq.(7) in Salcido et al. (2022).
+    mu function for a specific redshift. Defined in eq.(7) in Salcido et al. (2023).
 
     Parameters
     ----------
@@ -151,7 +151,7 @@ def _mu_funct(x, params):
 
 def _nu_func(x, params):
     """
-    nu function for a specific redshift. Defined in eq.(8) in Salcido et al. (2022).
+    nu function for a specific redshift. Defined in eq.(8) in Salcido et al. (2023).
 
     Parameters
     ----------
@@ -312,7 +312,7 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_pivot=1, M_halo=None, fb=None, e
         minimum co-moving wavenumber in units [h/Mpc]
     k_max : float, default 8, max 12
         maximum co-moving wavenumber in units [h/Mpc]. Default is set to the Nyquist frequency of the Antilles
-        simulations (see Salcido et al. 2022). 
+        simulations (see Salcido et al. 2023). 
     n : int, default 100
         number of equally spaced co-moving wavenumber in log-spaced between k_min and k_max.
     errors : boolean, default False
@@ -338,7 +338,7 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_pivot=1, M_halo=None, fb=None, e
     Notes
     ----------
     The maximum co-moving wavenumber in units [h/Mpc] is set to the Nyquist frequency of the Antilles simulations 
-    (see Salcido et al. 2022). Although SP(k) was fitted up to k = 12 [h/Mpc], we caution the user that setting 
+    (see Salcido et al. 2023). Although SP(k) was fitted up to k = 12 [h/Mpc], we caution the user that setting 
     𝑘 > 𝑘Ny (8 [h/Mpc]) might not be representative of the true uncertainties in the data. 
     """
 
