@@ -1,6 +1,6 @@
 
 """
-Contains the best fit values as in Salcido et al. (2022).
+Contains the best fit values as in Salcido et al. (2023).
 """
 
 

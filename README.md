@@ -6,7 +6,7 @@
      / .___/\__, /     /____/_/   / //_/|_|/_/  
     /_/    /____/                 |_|    /_/    
 
-py-SP(k) is a python package aimed at predicting the suppression of the total matter power spectrum due to baryonic physics as a function of the baryon fraction of haloes and redshift.
+py-SP(k) [(Salcido et al. 2023)](https://academic.oup.com/mnras/article/523/2/2247/7165765) is a python package aimed at predicting the suppression of the total matter power spectrum due to baryonic physics as a function of the baryon fraction of haloes and redshift.
 
 ## Requirements
 
@@ -120,15 +120,17 @@ Please cite py-SP(k) using:
 ```
 @ARTICLE{SPK_Salcido_2023,
     author = {Salcido, Jaime and McCarthy, Ian G and Kwan, Juliana and Upadhye, Amol and Font, Andreea S},
-    title = "{SP(k) - A hydrodynamical simulation-based model for the impact of baryon physics on the non-linear matter power spectrum}",
+    title = "{SP(k) – a hydrodynamical simulation-based model for the impact of baryon physics on the non-linear matter power spectrum}",
     journal = {Monthly Notices of the Royal Astronomical Society},
+    volume = {523},
+    number = {2},
+    pages = {2247-2262},
     year = {2023},
     month = {05},
     issn = {0035-8711},
     doi = {10.1093/mnras/stad1474},
     url = {https://doi.org/10.1093/mnras/stad1474},
-    note = {stad1474},
-    eprint = {https://academic.oup.com/mnras/advance-article-pdf/doi/10.1093/mnras/stad1474/50356057/stad1474.pdf},
+    eprint = {https://academic.oup.com/mnras/article-pdf/523/2/2247/50512773/stad1474.pdf},
 }
 ```
 For any questions and enquires please contact me via email at *j.salcidonegrete@ljmu.ac.uk*
