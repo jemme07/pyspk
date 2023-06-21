@@ -270,7 +270,7 @@ def _akino(alpha, beta, gamma, m_halo, z, cosmo):
 
 
 def sup_model(SO, z, fb_a=None, fb_pow=None, fb_pivot=1, M_halo=None, fb=None, extrapolate=False,
-              alpha=None, beta=None, gamma=None, cosmo=None, k_min=0.1, k_max=8, n=100, 
+              alpha=None, beta=None, gamma=None, cosmo=None, k_array=None, k_min=0.1, k_max=8, n=100, 
               errors=False, verbose=False):
     """
     Returns the suppression of the total matter power spectrum as a function of scale 'k' using the SP(k) model.
@@ -308,6 +308,8 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_pivot=1, M_halo=None, fb=None, e
         sets the Akino power law redshift dependence. 
     cosmo: astropy cosmology object, optional
         astropy cosmology object with the desired cosmology
+    k_array : array of float, optional
+        array containing the desired co-moving wavenumber in units [h/Mpc]. If given, k_min, k_max and n are ignored.
     k_min : float, default 0.1
         minimum co-moving wavenumber in units [h/Mpc]
     k_max : float, default 8, max 12
@@ -342,6 +344,7 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_pivot=1, M_halo=None, fb=None, e
     𝑘 > 𝑘Ny (8 [h/Mpc]) might not be representative of the true uncertainties in the data. 
     """
 
+
     if z < 0:
         raise Exception('\033[91mIncorrect redshift.\033[0m') from None
         
@@ -353,6 +356,21 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_pivot=1, M_halo=None, fb=None, e
         _warnings.warn('\033[33mpy-spk was calibrated down to z = 0.125. Redshifts '
                        'z < 0.125 may not be accurately reproduced by the model. \033[0m', stacklevel=2)
 
+    if cosmo is not None:
+        if not cosmo.Ob0:
+            raise Exception('\033[91mIncorrect cosmology. Please specify Omega_baryon.\033[0m') from None
+
+
+    if k_array is not None:
+        k_max = k_array.max()
+        k_min = k_array.min()
+        k = k_array
+
+    else:
+        k = _np.round(_np.logspace(_np.log10(k_min), _np.log10(k_max), n), 6)
+    
+    logk = _np.log10(k)
+
     if k_max > 12:
         raise Exception('\033[91mpy-spk was calibrated up to k_max = 12 [h/Mpc] '
                         'Please specify k_max <= 12 [h/Mpc] \033[0m') from None
@@ -361,13 +379,8 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_pivot=1, M_halo=None, fb=None, e
         _warnings.warn('\033[33mScales with k_max > k_ny = 8 [h/Mpc] '
                        'may not be accurately reproduced by the model. \033[0m', stacklevel=2)
 
-    if cosmo is not None:
-        if not cosmo.Ob0:
-            raise Exception('\033[91mIncorrect cosmology. Please specify Omega_baryon.\033[0m') from None
 
     params = _get_params(SO, z)
-    k = _np.round(_np.logspace(_np.log10(k_min), _np.log10(k_max), n), 6)
-    logk = _np.log10(k)
 
     best_mass = _optimal_mass_funct(k, params)
 
