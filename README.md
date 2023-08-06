@@ -85,9 +85,9 @@ k, sup = spk.sup_model(SO=500, z=z, alpha=alpha, beta=beta, gamma=gamma, cosmo=c
 
 We implemented a redshift-dependent double power-law fit to the total $f_b$ - $M_\mathrm{halo}$ relation as follows:
 
-$$f_b/(\Omega_b/\Omega_m)= \frac{1}{2}\right \epsilon \left[\left(\frac{M_{500c}}{M_{\mathrm{pivot} \mathrm{M}_ \odot}\right)^{\alpha} + \left(\frac{M_{500c}}{M_{\mathrm{pivot} \mathrm{M}_ \odot}\right)^{\beta}\right] \left(\frac{E(z)}{E(0.3)}\right)^{\gamma},$$
+$$f_b/(\Omega_b/\Omega_m)= \frac{1}{2} \epsilon \left[\left(\frac{M_{500c}}{M_{\mathrm{pivot}} [\mathrm{M}_ \odot]}\right)^{\alpha} + \left(\frac{M_{500c}}{M_{\mathrm{pivot}} [\mathrm{M}_ \odot]}\right)^{\beta}\right] \left(\frac{E(z)}{E(0.3)}\right)^{\gamma},$$
 
-where $\epsilon$ sets the normalisation at the pivot point, $M_{\mathrm{pivot}$, in units of $\mathrm{M}_ {\odot}$, $\alpha$ and $\beta$ are the power-law slopes at low and high mass respectively, $\gamma$ provides the redshift dependence and $E(z)$ is the usual dimensionless Hubble parameter. For simplicity, we use the cosmology implementation of `astropy` to specify the cosmological parameters in py-SP(k).
+where $\epsilon$ sets the normalisation at the pivot point, $M_{\mathrm{pivot}}$, in units of $\mathrm{M}_ {\odot}$, $\alpha$ and $\beta$ are the power-law slopes at low and high mass respectively, $\gamma$ provides the redshift dependence and $E(z)$ is the usual dimensionless Hubble parameter. For simplicity, we use the cosmology implementation of `astropy` to specify the cosmological parameters in py-SP(k).
 
 We find that this double redshift-dependent double power-law form provides a good fit to the whole range of the ANTILLES simulations. 
 
