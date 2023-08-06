@@ -8,6 +8,7 @@ import pkgutil as _pkgutil
 
 _warnings.filterwarnings("always", category=UserWarning)
 
+
 def _power_law(m_halo, fb_a, fb_pow, fb_pivot=1):
     """
     Simple power-law function fit to the baryon fraction - halo mass relation
@@ -204,7 +205,7 @@ def get_limits(SO, z, m_halo):
     min_fb = 10 ** (inter_min_x0(z) + inter_min_x1(z) * _np.log10(m_halo) + inter_min_x2(z) * _np.log10(m_halo) ** 2)
     max_fb = 10 ** (inter_max_x0(z) + inter_max_x1(z) * _np.log10(m_halo) + inter_max_x2(z) * _np.log10(m_halo) ** 2)
 
-    return min_fb, max_fb
+    return min_fb * 0.8, max_fb * 1.2
 
 
 def _get_params(SO, z):
@@ -268,9 +269,46 @@ def _akino(alpha, beta, gamma, m_halo, z, cosmo):
     return A * B * C
 
 
+def _double_power_law(epsilon, alpha, beta, gamma, m_pivot, m_halo, z, cosmo):
+    """
+    Returns a redshift dependent double power-law function of the baryon fraction 
+    as a function of halo mass.
+
+    Parameters
+    ----------
+    epsilon : float
+        normalization parameter.
+    alpha : float
+        power-law slope at low mass.
+    beta : float
+        power-law slope at high mass.
+    gamma : float
+        sets redshift dependence of the normalisation. 
+    m_pivot : float
+        double power law pivot point in M_sun units. 
+    m_halo: array of float
+        halo mass in M_sun units.
+    z : float
+        redshift z
+    cosmo: astropy cosmology object
+        astropy cosmology object with the desired cosmology
+        
+    Returns
+    -------
+    output: array of float
+        baryon fraction normalised by the Universal baryon fraction: f_b / (Omega_b / Omega_m)
+    """
+
+    A = 0.5 * epsilon * _np.power(cosmo.efunc(z) / cosmo.efunc(0.3), gamma)
+    B = _np.power(m_halo / m_pivot, alpha)
+    C = _np.power(m_halo / m_pivot, beta)
+
+    return A * (B + C)
+
+
 def sup_model(SO, z, fb_a=None, fb_pow=None, fb_pivot=1, M_halo=None, fb=None, extrapolate=False,
-              alpha=None, beta=None, gamma=None, cosmo=None, k_array=None, k_min=0.1, k_max=8, n=100, 
-              errors=False, verbose=False):
+              epsilon=None, alpha=None, beta=None, gamma=None, m_pivot=None, cosmo=None, 
+              k_array=None, k_min=0.1, k_max=8, n=100, errors=False, verbose=False):
     """
     Returns the suppression of the total matter power spectrum as a function of scale 'k' using the SP(k) model.
     Automatically selects the required optimal mass as a function of scale and redshift. Requires the baryon 
@@ -299,12 +337,16 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_pivot=1, M_halo=None, fb=None, e
         For interpolation, out-of-bounds points return NaNs.
     extrapolate: boolean, default False
         Whether to extrapolate to out-of-bounds points based on first and last intervals, or to return NaNs.
+    epsilon : float
+        normalization parameter for double power-law form.
     alpha : float, optional
-        sets the Akino power law constant
+        sets the Akino power law constant, or power-law slope at low mass for double power-law form.
     beta : float, optional
-        sets the Akino power law exponent
+        sets the Akino power law exponent, or power-law slope at high mass for double power-law form.
     gamma : float, optional
-        sets the Akino power law redshift dependence. 
+        sets the redshift dependence for Akino or double power-law form. 
+    m_pivot : float
+        double power law pivot point in M_sun units.
     cosmo: astropy cosmology object, optional
         astropy cosmology object with the desired cosmology
     k_array : array of float, optional
@@ -399,6 +441,17 @@ def sup_model(SO, z, fb_a=None, fb_pow=None, fb_pivot=1, M_halo=None, fb=None, e
             raise Exception('\033[91mWhen using binned data, both halo mass and baryon '
                             'fraction should be given as monotonically increasing arrays. '
                             'Please specify: M_halo (array) and fb (array). \033[0m')
+
+    elif (epsilon is not None) or (m_pivot is not None):
+        if verbose:
+            print('\033[36mUsing double power law for fb - M_halo at z=%.3f \033[0m' % z)
+        try:
+            f_b = _double_power_law(epsilon, alpha, beta, gamma, m_pivot, 10 ** best_mass, z, cosmo)
+        except:
+            raise Exception('\033[91mUsing double power-law. '
+                            'Please specify: epsilon, alpha, beta, gamma, '
+                            'm_pivot and cosmology (cosmo) \033[0m') from None
+
     else:
         if verbose:
             print('\033[36mUsing an Akino et al. 2022 power-law fit for fb ' 

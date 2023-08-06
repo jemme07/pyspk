@@ -60,7 +60,7 @@ $$f_b/(\Omega_b/\Omega_m)= \left(\frac{e^\alpha}{100}\right) \left(\frac{M_{500c
 
 where $\alpha$ sets the power-law normalisation, $\beta$ sets power-law slope, $\gamma$ provides the redshift dependence and $E(z)$ is the usual dimensionless Hubble parameter. For simplicity, we use the cosmology implementation of `astropy` to specify the cosmological parameters in py-SP(k).
 
-Note that this power-law has a normalisation that is redshift dependent, while the the slope is constant in redshift. While this provides a less flexible approach compared with Methods 1 (simple power-law) and Method 3 (binned data), we find that this parametrisation provides a reasonable agreement with our simulations up to redshift $z=1$, which is the redshift range proved by Akino et al. (2022). For higher redshifts, we find that simulations require a mass-dependent slope, especially at the lower mass range required to predict the suppression of the total matter power spectrum at such redshifts. 
+Note that this power-law has a normalisation that is redshift dependent, while the the slope is constant in redshift. While this provides a less flexible approach compared with Methods 1 (simple power-law) and Method 4 (binned data), we find that this parametrisation provides a reasonable agreement with our simulations up to redshift $z=1$, which is the redshift range proved by Akino et al. (2022). For higher redshifts, we find that simulations require a mass-dependent slope, especially at the lower mass range. 
 
 In the following example we use the redshift-dependent power-law fit parameters with a flat LambdaCDM cosmology. Note that any `astropy` cosmology could be used instead.
 
@@ -69,10 +69,9 @@ import pyspk.model as spk
 from astropy.cosmology import FlatLambdaCDM
 
 H0 = 70 
-Omega_b = 0.0463
 Omega_m = 0.2793
 
-cosmo = FlatLambdaCDM(H0=H0, Om0=Omega_m, Ob0=Omega_b) 
+cosmo = FlatLambdaCDM(H0=H0, Om0=Omega_m) 
 
 alpha = 4.189
 beta = 1.273
@@ -82,7 +81,39 @@ z = 0.5
 k, sup = spk.sup_model(SO=500, z=z, alpha=alpha, beta=beta, gamma=gamma, cosmo=cosmo)
 ```
 
-### Method 3: Binned data for the $f_b$ - $M_\mathrm{halo}$ relation. 
+### Method 3: Redshift-dependent double power-law fit to the $f_b$ - $M_\mathrm{halo}$ relation. 
+
+We implemented a redshift-dependent double power-law fit to the total $f_b$ - $M_\mathrm{halo}$ relation as follows:
+
+$$f_b/(\Omega_b/\Omega_m)= \frac{1}{2} \epsilon \left[\left(\frac{M_{500c}}{M_{\mathrm{pivot}}}\right)^{\alpha} + \left(\frac{M_{500c}}{M_{\mathrm{pivot}}}\right)^{\beta}\right] \left(\frac{E(z)}{E(0.3)}\right)^{\gamma},$$
+
+where $\epsilon$ sets the normalisation at the pivot point, $M_{\mathrm{pivot}}$, in units of $\mathrm{M}_ {\odot}$, $\alpha$ and $\beta$ are the power-law slopes at low and high mass respectively, $\gamma$ provides the redshift dependence and $E(z)$ is the usual dimensionless Hubble parameter. For simplicity, we use the cosmology implementation of `astropy` to specify the cosmological parameters in py-SP(k).
+
+We find that this double redshift-dependent double power-law form provides a good fit to the whole range of baryon fractions in the ANTILLES simulations. 
+
+In the following example we use the redshift-dependent double power-law fit parameters with a flat LambdaCDM cosmology. Note that any `astropy` cosmology could be used instead.
+
+```
+import pyspk.model as spk
+from astropy.cosmology import FlatLambdaCDM
+
+H0 = 68.0 
+Omega_m = 0.306
+
+cosmo = FlatLambdaCDM(H0=H0, Om0=Omega_m) 
+
+epsilon = 0.410
+alpha = -0.385
+beta = 0.451
+gamma = 0.125
+m_pivot = 1e13
+z = 0.2
+
+k, sup = spk.sup_model(SO=500, z=z, epsilon=epsilon, alpha=alpha, beta=beta, gamma=gamma, m_pivot=m_pivot, cosmo=cosmo)
+```
+
+
+### Method 4: Binned data for the $f_b$ - $M_\mathrm{halo}$ relation. 
 
 The final, and most flexible method is to provide py-SP(k) with the baryon fraction binned in bins of halo mass. This could be, for example, obtained from observational constraints, measured directly form simulations, or sampled from a predefined distribution or functional form. For an example using data obtained from the BAHAMAS simulations (McCarthy et al. 2017), please refer to the [examples](https://github.com/jemme07/pyspk/blob/main/examples/pySPk_Examples.ipynb) provided. 
 
