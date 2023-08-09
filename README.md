@@ -27,7 +27,7 @@ The --user flag may be required if you do not have root privileges.
 
 ## Usage
 
-py-SP(k) is not restrictive to a particular shape of the baryon fraction – halo mass relation. In order to provide flexibility to the user, we have implemented 3 different methods to provide py-SP(k) with the required $f_b$ - $M_\mathrm{halo}$ relation. In the following sections we describe these implementations. A jupyter notebook with more detailed examples can be found within this [repository](https://github.com/jemme07/pyspk/blob/main/examples/pySPk_Examples.ipynb). 
+py-SP(k) is not restrictive to a particular shape of the baryon fraction – halo mass relation. In order to provide flexibility to the user, we have implemented 4 different methods to provide py-SP(k) with the required $f_b$ - $M_\mathrm{halo}$ relation. In the following sections we describe these implementations. A jupyter notebook with more detailed examples can be found within this [repository](https://github.com/jemme07/pyspk/blob/main/examples/pySPk_Examples.ipynb). 
 
 ### Method 1: Using a power-law fit to the $f_b$ - $M_\mathrm{halo}$ relation
 
