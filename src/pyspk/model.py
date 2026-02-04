@@ -396,26 +396,58 @@ def sup_model(
     errors: bool = False,
     verbose: bool = False,
 ):
-    """Compute power spectrum suppression using the SP(k) model.
+    r"""Compute power spectrum suppression using the SP(k) model.
 
     The model requires a baryon fraction - halo mass relation, provided either parametrically
     (power-law, Akino et al. 2022, double power-law) or as binned arrays.
 
+    Relation specification
+        Provide exactly one of the relation kinds below by passing its required parameters.
+        (If you pass parameters from multiple kinds, the function will pick one using an
+        internal precedence rule; to avoid surprises, provide only one kind.)
+
+        - Power-law relation
+          Required: `fb_a`, `fb_pow`.
+          Optional: `fb_pivot` (pivot mass in M_sun; default is 1).
+          e.g. `sup_model(SO=200, z=0.125, fb_a=0.4, fb_pow=0.3, fb_pivot=10**13.5)`
+
+        - Binned relation
+          Required: `M_halo`, `fb` (same length).
+          Optional: `extrapolate` (if True, extrapolates in log10-space beyond the provided range).
+          e.g. `sup_model(SO=200, z=0.5, M_halo=masses, fb=fractions, extrapolate=True)`
+
+        - Akino (redshift-dependent) relation
+          Required: `alpha`, `beta`, `gamma`, `cosmo`.
+          `cosmo` must provide a callable `efunc(z)`.
+          e.g. `sup_model(SO=500, z=0.7, alpha=4.16, beta=1.2, gamma=0.39, cosmo=cosmo)`
+
+        - Double power-law relation
+          Required: `epsilon`, `alpha`, `beta`, `gamma`, `m_pivot`, `cosmo`.
+          `alpha` and `beta` are the low- and high-mass slopes; `m_pivot` is in M_sun.
+          `cosmo` must provide a callable `efunc(z)`.
+          e.g. `sup_model(SO=500, z=0.7, epsilon=0.3, alpha=1.1, beta=0.2, gamma=0.5, `
+          `m_pivot=1e14, cosmo=cosmo)`
+
     Args:
         SO: Spherical over-density. Supported values: 200 or 500.
         z: Redshift (calibrated for z <= 3).
-        fb_a: Power-law normalization.
-        fb_pow: Power-law exponent.
-        fb_pivot: Power-law pivot mass in M_sun units.
-        M_halo: Binned halo mass array for a non-parametric relation (M_sun).
-        fb: Binned baryon fraction array normalized by the universal baryon fraction.
-        extrapolate: Whether to extrapolate binned relations beyond provided bounds.
-        epsilon: Double power-law normalization parameter.
-        alpha: Akino normalization parameter OR low-mass slope for double power-law.
-        beta: Akino slope parameter OR high-mass slope for double power-law.
-        gamma: Redshift dependence parameter.
-        m_pivot: Double power-law pivot mass in M_sun units.
-        cosmo: Astropy cosmology object (required for Akino and double power-law modes).
+        fb_a: Power-law normalization (required for power-law relation).
+        fb_pow: Power-law exponent (required for power-law relation).
+        fb_pivot: Power-law pivot mass in M_sun units (power-law relation).
+        M_halo: Binned halo mass array for a binned relation (M_sun).
+        fb:
+            Binned baryon fraction array normalized by the universal baryon fraction
+            (binned relation).
+        extrapolate:
+            Whether to extrapolate binned relations beyond provided bounds (binned relation).
+        epsilon: Double power-law normalization parameter (double power-law relation).
+        alpha:
+            Akino normalization parameter (Akino relation) OR low-mass slope (double power-law
+            relation).
+        beta: Akino slope parameter (Akino relation) OR high-mass slope (double power-law relation).
+        gamma: Redshift dependence parameter (Akino and double power-law relations).
+        m_pivot: Double power-law pivot mass in M_sun units (double power-law relation).
+        cosmo: Astropy cosmology object (required for Akino and double power-law relations).
         k_array: Explicit k array in [h/Mpc]. If provided, `k_min`, `k_max`, and `n` are ignored.
         k_min: Minimum k in [h/Mpc] for generated grid.
         k_max: Maximum k in [h/Mpc] for generated grid.
