@@ -1,1 +1,7 @@
-recursive-include pyspk *
+include LICENSE.md
+include README.md
+
+graft src/pyspk
+
+global-exclude __pycache__
+global-exclude *.py[cod]
