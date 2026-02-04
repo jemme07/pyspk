@@ -424,8 +424,20 @@ def sup_model(
         verbose: Whether to print mode information.
 
     Returns:
-        If `errors` is False: `(k, sup)`.
-        If `errors` is True: `(k, sup, err68_minus, err68_plus, err95_minus, err95_plus)`.
+        When `errors=False`, only `k` and `sup` are returned.
+
+        k:
+            1D array of co-moving wavenumbers in units of [h/Mpc].
+        sup:
+            1D array of suppression values (the SP(k) prediction).
+        err68_minus:
+            1D array of the lower 68% statistical interval (only if `errors=True`).
+        err68_plus:
+            1D array of the upper 68% statistical interval (only if `errors=True`).
+        err95_minus:
+            1D array of the lower 95% statistical interval (only if `errors=True`).
+        err95_plus:
+            1D array of the upper 95% statistical interval (only if `errors=True`).
 
     Raises:
         InputValidationError: If inputs are invalid.
