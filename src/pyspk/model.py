@@ -446,7 +446,12 @@ def sup_model(
     """
     relation: dict
     if (fb_a is not None) or (fb_pow is not None):
-        relation = {"kind": "power_law", "fb_a": fb_a, "fb_pow": fb_pow, "fb_pivot": fb_pivot}
+        relation = {
+            "kind": "power_law",
+            "fb_a": fb_a,
+            "fb_pow": fb_pow,
+            "fb_pivot": fb_pivot,
+        }
     elif (M_halo is not None) or (fb is not None):
         relation = {
             "kind": "binned",
@@ -464,7 +469,12 @@ def sup_model(
             "m_pivot": m_pivot,
         }
     else:
-        relation = {"kind": "akino", "alpha": alpha, "beta": beta, "gamma": gamma}
+        relation = {
+            "kind": "akino",
+            "alpha": alpha,
+            "beta": beta,
+            "gamma": gamma,
+        }
 
     req_payload = {
         "SO": SO,
