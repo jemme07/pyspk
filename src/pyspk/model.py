@@ -15,7 +15,7 @@ if __name__ == "__main__" and __package__ is None:  # pragma: no cover
 
 import warnings as _warnings
 from collections.abc import Mapping
-from typing import Any, Literal, Optional, Protocol, overload
+from typing import Any, Callable, Literal, Optional, Protocol, overload
 
 import numpy as _np
 from pydantic import ValidationError
@@ -61,6 +61,26 @@ class CosmologyLike(Protocol):
     def efunc(self, z: float) -> float:  # pragma: no cover
         """Dimensionless Hubble parameter E(z)."""
         ...
+
+
+def _get_efunc(cosmo: Any) -> Callable[[float], Any]:
+    """Get an `efunc(z)` callable from a cosmology-like object.
+
+    Args:
+        cosmo: Cosmology-like object.
+
+    Returns:
+        Callable returning the dimensionless Hubble parameter $E(z)$.
+
+    Raises:
+        InputValidationError: If the object does not provide a callable `efunc`.
+    """
+    efunc = getattr(cosmo, "efunc", None)
+    if not callable(efunc):
+        raise InputValidationError(
+            "A cosmology object with a callable `efunc(z)` method is required for this relation."
+        )
+    return efunc
 
 
 def _power_law(m_halo: ArrayLike, fb_a: float, fb_pow: float, fb_pivot: float = 1.0) -> _np.ndarray:
@@ -275,19 +295,21 @@ def _get_params(SO: int, z: float) -> dict[str, float]:
     return params
 
 
-def _akino(rel: AkinoRelation, m_halo: _np.ndarray, z: float, cosmo: CosmologyLike) -> _np.ndarray:
+def _akino(rel: AkinoRelation, m_halo: _np.ndarray, z: float, cosmo: Any) -> _np.ndarray:
     """Evaluate the Akino relation."""
     A = _np.exp(rel.alpha) / 100
     B = _np.power(m_halo / 1e14, rel.beta - 1)
-    C = _np.power(cosmo.efunc(z) / cosmo.efunc(0.3), rel.gamma)
+    efunc = _get_efunc(cosmo)
+    C = _np.power(efunc(z) / efunc(0.3), rel.gamma)
     return A * B * C
 
 
 def _double_power_law(
-    rel: DoublePowerLawRelation, m_halo: _np.ndarray, z: float, cosmo: CosmologyLike
+    rel: DoublePowerLawRelation, m_halo: _np.ndarray, z: float, cosmo: Any
 ) -> _np.ndarray:
     """Evaluate the double power-law relation."""
-    A = 0.5 * rel.epsilon * _np.power(cosmo.efunc(z) / cosmo.efunc(0.3), rel.gamma)
+    efunc = _get_efunc(cosmo)
+    A = 0.5 * rel.epsilon * _np.power(efunc(z) / efunc(0.3), rel.gamma)
     B = _np.power(m_halo / rel.m_pivot, rel.alpha)
     C = _np.power(m_halo / rel.m_pivot, rel.beta)
     return A * (B + C)
@@ -308,7 +330,7 @@ def sup_model(
     beta: Optional[float] = ...,
     gamma: Optional[float] = ...,
     m_pivot: Optional[float] = ...,
-    cosmo: Optional[CosmologyLike] = ...,
+    cosmo: Optional[Any] = ...,
     k_array: Optional[ArrayLike] = ...,
     k_min: float = ...,
     k_max: float = ...,
@@ -334,7 +356,7 @@ def sup_model(
     beta: Optional[float] = ...,
     gamma: Optional[float] = ...,
     m_pivot: Optional[float] = ...,
-    cosmo: Optional[CosmologyLike] = ...,
+    cosmo: Optional[Any] = ...,
     k_array: Optional[ArrayLike] = ...,
     k_min: float = ...,
     k_max: float = ...,
@@ -366,7 +388,7 @@ def sup_model(
     beta: Optional[float] = None,
     gamma: Optional[float] = None,
     m_pivot: Optional[float] = None,
-    cosmo: Optional[CosmologyLike] = None,
+    cosmo: Optional[Any] = None,
     k_array: Optional[ArrayLike] = None,
     k_min: float = 0.1,
     k_max: float = 8,
