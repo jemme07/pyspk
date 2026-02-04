@@ -1,2 +1,32 @@
-.*
+## Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+## Virtual environments
+.venv/
+venv/
+ENV/
+
+## Packaging/build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+## Tooling
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+.coverage
+coverage.xml
+
+## OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+## Allow repository config
 !/.gitignore
+!/.python-version

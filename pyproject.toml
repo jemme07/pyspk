@@ -1,0 +1,99 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyspk"
+version = "1.8.0"
+description = "Python package to predict the suppression of the total matter power spectrum due to baryonic physics"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE.md" }
+authors = [
+  { name = "Jaime Salcido", email = "j.salcidonegrete@ljmu.ac.uk" },
+]
+keywords = ["cosmology", "matter power spectrum", "baryons", "astrophysics"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Operating System :: OS Independent",
+  "Topic :: Scientific/Engineering :: Physics",
+]
+dependencies = [
+  "numpy>=1.22",
+  "scipy>=1.8",
+]
+
+[project.urls]
+Homepage = "https://github.com/jemme07/pyspk"
+Repository = "https://github.com/jemme07/pyspk"
+Issues = "https://github.com/jemme07/pyspk/issues"
+
+[project.optional-dependencies]
+cosmology = [
+  "astropy>=5",
+]
+dev = [
+  "pytest>=8",
+  "ruff>=0.6",
+  "black>=24",
+  "mypy>=1.8",
+]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pyspk*"]
+
+[tool.setuptools.package-data]
+pyspk = ["stat_errors_*.csv", "py.typed"]
+
+[tool.black]
+line-length = 100
+target-version = ["py39"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = [
+  "E",
+  "F",
+  "I",
+  "W",
+  "UP",
+  "B",
+  "SIM",
+  "NPY",
+  "D",
+]
+ignore = [
+  "D203",
+  "D213",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+no_implicit_optional = true
+check_untyped_defs = true
+strict_equality = true
+ignore_missing_imports = true
