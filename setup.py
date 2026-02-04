@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from setuptools import setup
+from setuptools import find_packages, setup
 
 
 def _read_readme() -> str:
@@ -26,7 +26,8 @@ setup(
     url="https://github.com/jemme07/pyspk",
     author="Jaime Salcido",
     author_email="j.salcidonegrete@ljmu.ac.uk",
-    packages=["pyspk"],
+    package_dir={"": "src"},
+    packages=find_packages(where="src"),
     long_description=_read_readme(),
     long_description_content_type="text/markdown",
     classifiers=[
@@ -35,6 +36,6 @@ setup(
         "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
         "Operating System :: OS Independent",
     ],
-    install_requires=["numpy>=1.22", "scipy>=1.8"],
+    install_requires=["numpy>=1.22", "scipy>=1.8", "pydantic>=2"],
     include_package_data=True,
 )

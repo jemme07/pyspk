@@ -28,6 +28,7 @@ classifiers = [
 ]
 dependencies = [
   "numpy>=1.22",
+  "pydantic>=2",
   "scipy>=1.8",
 ]
 
@@ -50,8 +51,11 @@ dev = [
 [tool.setuptools]
 include-package-data = true
 
+[tool.setuptools.package-dir]
+"" = "src"
+
 [tool.setuptools.packages.find]
-where = ["."]
+where = ["src"]
 include = ["pyspk*"]
 
 [tool.setuptools.package-data]
