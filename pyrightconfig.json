@@ -1,0 +1,16 @@
+{
+  "include": ["src", "tests"],
+  "exclude": [".venv", "dist", "build"],
+  "venvPath": ".",
+  "venv": ".venv",
+  "extraPaths": ["src"],
+  "executionEnvironments": [
+    {
+      "root": ".",
+      "extraPaths": ["src"]
+    }
+  ],
+  "reportMissingImports": true,
+  "pythonVersion": "3.9",
+  "pythonPlatform": "Windows"
+}

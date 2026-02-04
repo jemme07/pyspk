@@ -46,6 +46,13 @@ __all__ = [
     "sup_model",
 ]
 
+
+if __name__ == "__main__":  # pragma: no cover
+    raise SystemExit(
+        "This module is meant to be imported as part of the 'pyspk' package. "
+        "Run 'python -m pyspk.model' (module mode) or import 'pyspk' instead."
+    )
+
 ArrayLike = _npt.ArrayLike
 
 

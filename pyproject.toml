@@ -41,8 +41,16 @@ Issues = "https://github.com/jemme07/pyspk/issues"
 cosmology = [
   "astropy>=5",
 ]
+examples = [
+  "astropy>=5",
+  "cycler>=0.12",
+  "jupyter>=1.0",
+  "matplotlib>=3.7",
+  "pandas>=2.0",
+]
 dev = [
   "pytest>=8",
+  "pyright>=1.1.380",
   "ruff>=0.6",
   "black>=24",
   "mypy>=1.8",

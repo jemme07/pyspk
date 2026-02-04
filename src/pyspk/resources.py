@@ -19,5 +19,4 @@ def read_text(package: str, name: str, *, encoding: str = "utf-8") -> str:
     Raises:
         FileNotFoundError: If the resource does not exist.
     """
-
     return _resources.files(package).joinpath(name).read_text(encoding=encoding)
