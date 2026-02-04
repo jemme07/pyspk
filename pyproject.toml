@@ -30,6 +30,7 @@ dependencies = [
   "numpy>=1.22",
   "pydantic>=2",
   "scipy>=1.8",
+  "typing-extensions>=4.8",
 ]
 
 [project.urls]
@@ -92,6 +93,8 @@ select = [
 ignore = [
   "D203",
   "D213",
+  "UP007",
+  "UP045",
 ]
 
 [tool.ruff.lint.pydocstyle]

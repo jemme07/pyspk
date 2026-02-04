@@ -7,15 +7,21 @@ All user-facing inputs are validated using Pydantic models in `pyspk.schema`.
 
 from __future__ import annotations
 
+if __name__ == "__main__" and __package__ is None:  # pragma: no cover
+    raise SystemExit(
+        "This module is meant to be imported as part of the 'pyspk' package. "
+        "Run it in module mode: 'python -m pyspk.model'."
+    )
+
 import warnings as _warnings
 from collections.abc import Mapping
-from typing import Protocol
+from typing import Any, Literal, Optional, Protocol, overload
 
 import numpy as _np
-import numpy.typing as _npt
 from pydantic import ValidationError
 from scipy.interpolate import Akima1DInterpolator as _Akima1DInterpolator
 from scipy.interpolate import LinearNDInterpolator as _LinearNDInterpolator
+from typing_extensions import TypeAlias
 
 from .constants import (
     CALIBRATED_K_MAX,
@@ -46,14 +52,7 @@ __all__ = [
     "sup_model",
 ]
 
-
-if __name__ == "__main__":  # pragma: no cover
-    raise SystemExit(
-        "This module is meant to be imported as part of the 'pyspk' package. "
-        "Run 'python -m pyspk.model' (module mode) or import 'pyspk' instead."
-    )
-
-ArrayLike = _npt.ArrayLike
+ArrayLike: TypeAlias = Any
 
 
 class CosmologyLike(Protocol):
@@ -294,22 +293,81 @@ def _double_power_law(
     return A * (B + C)
 
 
+@overload
 def sup_model(
     SO: int,
     z: float,
-    fb_a: float | None = None,
-    fb_pow: float | None = None,
+    fb_a: Optional[float] = ...,
+    fb_pow: Optional[float] = ...,
+    fb_pivot: float = ...,
+    M_halo: Optional[ArrayLike] = ...,
+    fb: Optional[ArrayLike] = ...,
+    extrapolate: bool = ...,
+    epsilon: Optional[float] = ...,
+    alpha: Optional[float] = ...,
+    beta: Optional[float] = ...,
+    gamma: Optional[float] = ...,
+    m_pivot: Optional[float] = ...,
+    cosmo: Optional[CosmologyLike] = ...,
+    k_array: Optional[ArrayLike] = ...,
+    k_min: float = ...,
+    k_max: float = ...,
+    n: int = ...,
+    *,
+    errors: Literal[False] = ...,
+    verbose: bool = ...,
+) -> tuple[_np.ndarray, _np.ndarray]: ...
+
+
+@overload
+def sup_model(
+    SO: int,
+    z: float,
+    fb_a: Optional[float] = ...,
+    fb_pow: Optional[float] = ...,
+    fb_pivot: float = ...,
+    M_halo: Optional[ArrayLike] = ...,
+    fb: Optional[ArrayLike] = ...,
+    extrapolate: bool = ...,
+    epsilon: Optional[float] = ...,
+    alpha: Optional[float] = ...,
+    beta: Optional[float] = ...,
+    gamma: Optional[float] = ...,
+    m_pivot: Optional[float] = ...,
+    cosmo: Optional[CosmologyLike] = ...,
+    k_array: Optional[ArrayLike] = ...,
+    k_min: float = ...,
+    k_max: float = ...,
+    n: int = ...,
+    *,
+    errors: Literal[True],
+    verbose: bool = ...,
+) -> tuple[
+    _np.ndarray,
+    _np.ndarray,
+    _np.ndarray,
+    _np.ndarray,
+    _np.ndarray,
+    _np.ndarray,
+]: ...
+
+
+def sup_model(
+    SO: int,
+    z: float,
+    fb_a: Optional[float] = None,
+    fb_pow: Optional[float] = None,
     fb_pivot: float = 1,
-    M_halo: ArrayLike | None = None,
-    fb: ArrayLike | None = None,
+    M_halo: Optional[ArrayLike] = None,
+    fb: Optional[ArrayLike] = None,
     extrapolate: bool = False,
-    epsilon: float | None = None,
-    alpha: float | None = None,
-    beta: float | None = None,
-    gamma: float | None = None,
-    m_pivot: float | None = None,
-    cosmo: CosmologyLike | None = None,
-    k_array: ArrayLike | None = None,
+    epsilon: Optional[float] = None,
+    alpha: Optional[float] = None,
+    beta: Optional[float] = None,
+    gamma: Optional[float] = None,
+    m_pivot: Optional[float] = None,
+    cosmo: Optional[CosmologyLike] = None,
+    k_array: Optional[ArrayLike] = None,
     k_min: float = 0.1,
     k_max: float = 8,
     n: int = 100,

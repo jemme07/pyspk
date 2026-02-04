@@ -6,10 +6,11 @@ also be imported by users who want structured inputs.
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Any, Literal, Optional, Union
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from typing_extensions import TypeAlias
 
 from .constants import CALIBRATED_K_MAX, CALIBRATED_Z_MAX, SUPPORTED_SOS
 
@@ -89,7 +90,12 @@ class DoublePowerLawRelation(_Base):
         return v
 
 
-Relation = PowerLawRelation | BinnedRelation | AkinoRelation | DoublePowerLawRelation
+Relation: TypeAlias = Union[
+    PowerLawRelation,
+    BinnedRelation,
+    AkinoRelation,
+    DoublePowerLawRelation,
+]
 
 
 class SupModelRequest(_Base):
@@ -106,9 +112,9 @@ class SupModelRequest(_Base):
     z: float
     relation: Relation
 
-    cosmo: Any | None = None
+    cosmo: Optional[Any] = None
 
-    k_array: list[float] | None = None
+    k_array: Optional[list[float]] = None
     k_min: float = 0.1
     k_max: float = 8.0
     n: int = Field(default=100, ge=2)

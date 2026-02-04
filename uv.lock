@@ -3612,6 +3612,7 @@ dependencies = [
     { name = "scipy", version = "1.13.1", source = { registry = "https://pypi.python.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.python.org/simple" }, marker = "python_full_version == '3.10.*'" },
     { name = "scipy", version = "1.17.0", source = { registry = "https://pypi.python.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "typing-extensions" },
 ]
 
 [package.optional-dependencies]
@@ -3657,6 +3658,7 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.6" },
     { name = "scipy", specifier = ">=1.8" },
+    { name = "typing-extensions", specifier = ">=4.8" },
 ]
 provides-extras = ["cosmology", "examples", "dev"]
 
