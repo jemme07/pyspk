@@ -952,6 +952,19 @@ wheels = [
 ]
 
 [[package]]
+name = "corner"
+version = "2.2.3"
+source = { registry = "https://pypi.python.org/simple" }
+dependencies = [
+    { name = "matplotlib", version = "3.9.4", source = { registry = "https://pypi.python.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "matplotlib", version = "3.10.8", source = { registry = "https://pypi.python.org/simple" }, marker = "python_full_version >= '3.10'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/5c/61/2d728798e9ae3bf899d962f77486cb29888d57f6fbf9561bc1435a6b1a74/corner-2.2.3.tar.gz", hash = "sha256:471b7b63395d8f1dee176bb779348ade38d56abd23404a48802a593607745e1c", size = 5932840, upload-time = "2024-11-23T12:50:56.955Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4e/4a/5bd0a8b981c5a93153d9eb7c63143b407cc7f8dfc9f91eedc9b6f5289eca/corner-2.2.3-py3-none-any.whl", hash = "sha256:39674b223482456c3a78234dc7bdefd21188a2d47bb8cd468104a0501f6659ec", size = 15946, upload-time = "2024-11-23T12:50:53.639Z" },
+]
+
+[[package]]
 name = "cycler"
 version = "0.12.1"
 source = { registry = "https://pypi.python.org/simple" }
@@ -3648,6 +3661,7 @@ examples = [
     { name = "astropy", version = "5.3.2", source = { registry = "https://pypi.python.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "astropy", version = "6.1.7", source = { registry = "https://pypi.python.org/simple" }, marker = "python_full_version == '3.10.*'" },
     { name = "astropy", version = "7.2.0", source = { registry = "https://pypi.python.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "corner" },
     { name = "cycler" },
     { name = "emcee" },
     { name = "jupyter" },
@@ -3662,6 +3676,7 @@ requires-dist = [
     { name = "astropy", marker = "extra == 'cosmology'", specifier = ">=5" },
     { name = "astropy", marker = "extra == 'examples'", specifier = ">=5" },
     { name = "black", marker = "extra == 'dev'", specifier = ">=24" },
+    { name = "corner", marker = "extra == 'examples'", specifier = ">=2.2" },
     { name = "cycler", marker = "extra == 'examples'", specifier = ">=0.12" },
     { name = "emcee", marker = "extra == 'examples'", specifier = ">=3" },
     { name = "jupyter", marker = "extra == 'examples'", specifier = ">=1.0" },
