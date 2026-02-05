@@ -45,6 +45,7 @@ cosmology = [
 examples = [
   "astropy>=5",
   "cycler>=0.12",
+  "emcee>=3",
   "jupyter>=1.0",
   "matplotlib>=3.7",
   "pandas>=2.0",

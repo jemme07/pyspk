@@ -160,6 +160,9 @@ The final, and most flexible method is to provide py-SP(k) with the baryon fract
 If you prefer an explicit, validated input object (e.g., for configuration-driven workflows),
 the Pydantic models are available in `pyspk.api`:
 
+`relation.kind` supports the same four relation kinds used throughout the docs:
+`"power_law"`, `"akino"`, `"double_power_law"`, and `"binned"`.
+
     from pyspk.api import SupModelRequest
 
     req = SupModelRequest(
@@ -175,6 +178,16 @@ You can also inspect relation-specific requirements via `help(pyspk.sup_model)`.
 
 ## MCMC / fast inner loops (errors=False)
 
+### Relation kinds (`relation_kind`)
+
+The fast evaluator API requires an explicit `relation_kind` to avoid per-call validation.
+Supported values are:
+
+- `"power_law"` (Method 1): requires `fb_a`, `fb_pow` (optional `fb_pivot`).
+- `"akino"` (Method 2): requires `alpha`, `beta`, `gamma` and either `cosmo` or `efunc`.
+- `"double_power_law"` (Method 3): requires `epsilon`, `alpha`, `beta`, `gamma`, `m_pivot` and either `cosmo` or `efunc`.
+- `"binned"` (Method 4): requires `M_halo`, `fb` (optional `extrapolate`).
+
 If you are calling py-SP(k) in a tight loop (e.g., an MCMC likelihood) and you typically use
 `errors=False`, you can build a fast evaluator. This avoids per-call Pydantic validation and
 caches the k-grid and fitting-limit interpolators.
@@ -188,6 +201,34 @@ caches the k-grid and fitting-limit interpolators.
 
 For cosmology-based relations, you may also pass `efunc` directly (a callable returning $E(z)$)
 instead of an `astropy` cosmology object.
+
+### Optional: `emcee` sketch
+
+If you use `emcee` (or a similar sampler), the key idea is to build the evaluator once and call it
+inside `log_prob`. Install with `pip install emcee` (or `uv sync --extra examples` when working from
+source).
+
+    import numpy as np
+    import pyspk as spk
+
+    # Optional (for Method 2/3):
+    from astropy.cosmology import FlatLambdaCDM
+
+    cosmo = FlatLambdaCDM(H0=70, Om0=0.2793)
+    evaluator = spk.build_sup_model_evaluator(SO=500, relation_kind="akino", k_max=8, n=100)
+
+    k_data = np.logspace(-1, np.log10(8.0), 60)
+    sup_data = np.ones_like(k_data)  # replace with your measured/target suppression
+    sigma = 0.05
+
+    def log_prob(theta: np.ndarray) -> float:
+        alpha, beta, gamma = theta
+        z = 0.5
+        k, sup = evaluator(z=z, alpha=alpha, beta=beta, gamma=gamma, cosmo=cosmo)
+        sup = np.interp(k_data, k, sup)
+        if not np.all(np.isfinite(sup)):
+            return -np.inf
+        return -0.5 * np.sum(((sup - sup_data) / sigma) ** 2)
 
 ## Priors
 
