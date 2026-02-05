@@ -39,8 +39,8 @@ from .fit_vals import best_fit_vals as _best_fit_vals
 from .fit_vals import limits as _limits
 from .resources import read_text as _read_text
 from .schema import (
-    AkinoRelation,
     BinnedRelation,
+    CosmoPowerLawRelation,
     DoublePowerLawRelation,
     PowerLawRelation,
     SupModelRequest,
@@ -59,7 +59,7 @@ ArrayLike: TypeAlias = Any
 
 
 class CosmologyLike(Protocol):
-    """Protocol for cosmology objects used by the Akino relations."""
+    """Protocol for cosmology objects used by the cosmology-based relations."""
 
     def efunc(self, z: float) -> float:  # pragma: no cover
         """Dimensionless Hubble parameter E(z)."""
@@ -298,8 +298,13 @@ def _get_params(SO: int, z: float) -> dict[str, float]:
     return params
 
 
-def _akino(rel: AkinoRelation, m_halo: _np.ndarray, z: float, cosmo: Any) -> _np.ndarray:
-    """Evaluate the Akino relation."""
+def _cosmo_power_law(
+    rel: CosmoPowerLawRelation,
+    m_halo: _np.ndarray,
+    z: float,
+    cosmo: Any,
+) -> _np.ndarray:
+    """Evaluate the cosmology-based redshift-dependent power-law relation."""
     A = _np.exp(rel.alpha) / 100
     B = _np.power(m_halo / 1e14, rel.beta - 1)
     efunc = _get_efunc(cosmo)
@@ -419,8 +424,8 @@ def sup_model(
           Optional: `extrapolate` (if True, extrapolates in log10-space beyond the provided range).
           e.g. `sup_model(SO=200, z=0.5, M_halo=masses, fb=fractions, extrapolate=True)`
 
-        - Akino (redshift-dependent) relation
-          Required: `alpha`, `beta`, `gamma`, `cosmo`.
+                - Cosmology-based (redshift-dependent) power-law relation (Akino et al. 2022)
+                    Required: `alpha`, `beta`, `gamma`, `cosmo`.
           `cosmo` must provide a callable `efunc(z)`.
           e.g. `sup_model(SO=500, z=0.7, alpha=4.16, beta=1.2, gamma=0.39, cosmo=cosmo)`
 
@@ -445,12 +450,15 @@ def sup_model(
             Whether to extrapolate binned relations beyond provided bounds (binned relation).
         epsilon: Double power-law normalization parameter (double power-law relation).
         alpha:
-            Akino normalization parameter (Akino relation) OR low-mass slope (double power-law
-            relation).
-        beta: Akino slope parameter (Akino relation) OR high-mass slope (double power-law relation).
-        gamma: Redshift dependence parameter (Akino and double power-law relations).
+            Normalization parameter (cosmo power-law; Akino et al. 2022) OR low-mass slope
+            (double power-law relation).
+        beta:
+            Slope parameter (cosmo power-law; Akino et al. 2022) OR high-mass slope
+            (double power-law relation).
+        gamma: Redshift dependence parameter (cosmo power-law and double power-law relations).
         m_pivot: Double power-law pivot mass in M_sun units (double power-law relation).
-        cosmo: Astropy cosmology object (required for Akino and double power-law relations).
+        cosmo:
+            Astropy cosmology object (required for cosmo power-law and double power-law relations).
         k_array: Explicit k array in [h/Mpc]. If provided, `k_min`, `k_max`, and `n` are ignored.
         k_min: Minimum k in [h/Mpc] for generated grid.
         k_max: Maximum k in [h/Mpc] for generated grid.
@@ -505,7 +513,7 @@ def sup_model(
         }
     else:
         relation = {
-            "kind": "akino",
+            "kind": "cosmo_power_law",
             "alpha": alpha,
             "beta": beta,
             "gamma": gamma,
@@ -599,14 +607,18 @@ def sup_model(
     else:
         if verbose:
             _warnings.warn(
-                f"Using an Akino et al. 2022 power-law fit for fb - M_halo at z={req.z:.3f}.",
+                (
+                    "Using a cosmology-based power-law fit (Akino et al. 2022) for fb - M_halo at "
+                    f"z={req.z:.3f}."
+                ),
                 stacklevel=2,
             )
         if req.cosmo is None:
             raise InputValidationError(
-                "A cosmology object with an `efunc(z)` method is required for the Akino relation."
+                "A cosmology object with an `efunc(z)` method is required for the cosmo power-law "
+                "relation."
             )
-        f_b = _akino(req.relation, 10**best_mass, float(req.z), req.cosmo)
+        f_b = _cosmo_power_law(req.relation, 10**best_mass, float(req.z), req.cosmo)
 
     min_fb, max_fb = get_limits(req.SO, req.z, 10**best_mass)
     out_min = f_b < min_fb
@@ -747,7 +759,7 @@ class SupModelEvaluator:
     """
 
     SO: int
-    relation_kind: Literal["power_law", "binned", "akino", "double_power_law"]
+    relation_kind: Literal["power_law", "binned", "cosmo_power_law", "double_power_law"]
     k: _np.ndarray
     logk: _np.ndarray
     inter_min_x0: _Akima1DInterpolator
@@ -787,11 +799,11 @@ class SupModelEvaluator:
             fb: Binned baryon fraction array (binned relation).
             extrapolate: Extrapolate binned relations beyond bounds (binned relation).
             epsilon: Double power-law normalization parameter (double power-law relation).
-            alpha: Akino normalization OR low-mass slope for double power-law.
-            beta: Akino slope OR high-mass slope for double power-law.
-            gamma: Redshift dependence parameter (Akino/double power-law).
+            alpha: Normalization (cosmo power-law) OR low-mass slope for double power-law.
+            beta: Slope (cosmo power-law) OR high-mass slope for double power-law.
+            gamma: Redshift dependence parameter (cosmo power-law/double power-law).
             m_pivot: Double power-law pivot mass in M_sun units.
-            cosmo: Cosmology-like object providing `efunc(z)` (Akino/double power-law).
+            cosmo: Cosmology-like object providing `efunc(z)` (cosmo power-law/double power-law).
             efunc: Optional direct callable for `E(z)`; if provided, `cosmo` is not used.
             verbose: Whether to emit informational warnings.
 
@@ -872,18 +884,23 @@ class SupModelEvaluator:
             C = _np.power(10**best_mass / m_pivot_f, beta_f)
             f_b = A * (B + C)
 
-        else:  # akino
+        else:  # cosmo_power_law
             if alpha is None:
-                raise InputValidationError("Akino relation requires `alpha`.")
+                raise InputValidationError("Cosmo power-law relation requires `alpha`.")
             if beta is None:
-                raise InputValidationError("Akino relation requires `beta`.")
+                raise InputValidationError("Cosmo power-law relation requires `beta`.")
             if gamma is None:
-                raise InputValidationError("Akino relation requires `gamma`.")
+                raise InputValidationError("Cosmo power-law relation requires `gamma`.")
             if cosmo is None and efunc is None:
-                raise InputValidationError("Akino relation requires either `cosmo` or `efunc`.")
+                raise InputValidationError(
+                    "Cosmo power-law relation requires either `cosmo` or `efunc`."
+                )
             if verbose:
                 _warnings.warn(
-                    f"Using an Akino et al. 2022 power-law fit for fb - M_halo at z={z:.3f}.",
+                    (
+                        "Using a cosmology-based power-law fit (Akino et al. 2022) for fb - "
+                        f"M_halo at z={z:.3f}."
+                    ),
                     stacklevel=2,
                 )
 
@@ -924,7 +941,7 @@ class SupModelEvaluator:
 def build_sup_model_evaluator(
     *,
     SO: int,
-    relation_kind: Literal["power_law", "binned", "akino", "double_power_law"],
+    relation_kind: Literal["power_law", "binned", "cosmo_power_law", "double_power_law"],
     k_array: Optional[ArrayLike] = None,
     k_min: float = 0.1,
     k_max: float = 8,

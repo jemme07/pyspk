@@ -63,10 +63,14 @@ class BinnedRelation(_Base):
         return self
 
 
-class AkinoRelation(_Base):
-    """Akino et al. (2022) redshift-dependent power-law relation."""
+class CosmoPowerLawRelation(_Base):
+    """Cosmology-based redshift-dependent power-law relation.
 
-    kind: Literal["akino"] = "akino"
+    Notes:
+        This corresponds to the functional form motivated by Akino et al. (2022).
+    """
+
+    kind: Literal["cosmo_power_law"] = "cosmo_power_law"
     alpha: float
     beta: float
     gamma: float
@@ -93,7 +97,7 @@ class DoublePowerLawRelation(_Base):
 Relation: TypeAlias = Union[
     PowerLawRelation,
     BinnedRelation,
-    AkinoRelation,
+    CosmoPowerLawRelation,
     DoublePowerLawRelation,
 ]
 
@@ -102,7 +106,7 @@ class SupModelRequest(_Base):
     """Validated request object for `pyspk.model.sup_model`.
 
     Notes:
-        For `akino` and `double_power_law` relations, the caller must provide a compatible
+        For `cosmo_power_law` and `double_power_law` relations, the caller must provide a compatible
         `astropy` cosmology when calling `sup_model`.
     """
 
@@ -162,7 +166,7 @@ class SupModelRequest(_Base):
             if self.k_max > CALIBRATED_K_MAX:
                 raise ValueError(f"k_max must be <= {CALIBRATED_K_MAX}")
 
-        if self.relation.kind in {"akino", "double_power_law"} and self.cosmo is None:
-            raise ValueError("cosmo is required for akino and double_power_law relations")
+        if self.relation.kind in {"cosmo_power_law", "double_power_law"} and self.cosmo is None:
+            raise ValueError("cosmo is required for cosmo_power_law and double_power_law relations")
 
         return self

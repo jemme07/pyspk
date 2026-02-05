@@ -6,16 +6,16 @@ These are always available because Pydantic is a required dependency of `pyspk`.
 from __future__ import annotations
 
 from .schema import (
-    AkinoRelation,
     BinnedRelation,
+    CosmoPowerLawRelation,
     DoublePowerLawRelation,
     PowerLawRelation,
     SupModelRequest,
 )
 
 __all__ = [
-    "AkinoRelation",
     "BinnedRelation",
+    "CosmoPowerLawRelation",
     "DoublePowerLawRelation",
     "PowerLawRelation",
     "SupModelRequest",

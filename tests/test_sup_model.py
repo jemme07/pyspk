@@ -82,10 +82,15 @@ def test_evaluator_matches_sup_model_power_law() -> None:
     assert np.allclose(sup1, sup2, equal_nan=True)
 
 
-def test_evaluator_matches_sup_model_akino() -> None:
-    """Evaluator matches sup_model for an Akino relation using a dummy cosmology."""
+def test_evaluator_matches_sup_model_cosmo_power_law() -> None:
+    """Evaluator matches sup_model for the cosmology-based power-law relation."""
     cosmo = _DummyCosmo(omega_m=0.3)
-    evaluator = pyspk.build_sup_model_evaluator(SO=500, relation_kind="akino", k_max=2.0, n=32)
+    evaluator = pyspk.build_sup_model_evaluator(
+        SO=500,
+        relation_kind="cosmo_power_law",
+        k_max=2.0,
+        n=32,
+    )
 
     z = 0.7
     alpha = 4.16

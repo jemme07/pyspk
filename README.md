@@ -161,7 +161,7 @@ If you prefer an explicit, validated input object (e.g., for configuration-drive
 the Pydantic models are available in `pyspk.api`:
 
 `relation.kind` supports the same four relation kinds used throughout the docs:
-`"power_law"`, `"akino"`, `"double_power_law"`, and `"binned"`.
+`"power_law"`, `"cosmo_power_law"`, `"double_power_law"`, and `"binned"`.
 
     from pyspk.api import SupModelRequest
 
@@ -184,7 +184,7 @@ The fast evaluator API requires an explicit `relation_kind` to avoid per-call va
 Supported values are:
 
 - `"power_law"` (Method 1): requires `fb_a`, `fb_pow` (optional `fb_pivot`).
-- `"akino"` (Method 2): requires `alpha`, `beta`, `gamma` and either `cosmo` or `efunc`.
+- `"cosmo_power_law"` (Method 2; Akino et al. 2022): requires `alpha`, `beta`, `gamma` and either `cosmo` or `efunc`.
 - `"double_power_law"` (Method 3): requires `epsilon`, `alpha`, `beta`, `gamma`, `m_pivot` and either `cosmo` or `efunc`.
 - `"binned"` (Method 4): requires `M_halo`, `fb` (optional `extrapolate`).
 
@@ -194,7 +194,12 @@ caches the k-grid and fitting-limit interpolators.
 
     import pyspk
 
-    evaluator = pyspk.build_sup_model_evaluator(SO=500, relation_kind="akino", k_max=8, n=100)
+    evaluator = pyspk.build_sup_model_evaluator(
+        SO=500,
+        relation_kind="cosmo_power_law",
+        k_max=8,
+        n=100,
+    )
 
     # In your MCMC loop:
     k, sup = evaluator(z=z, alpha=alpha, beta=beta, gamma=gamma, cosmo=cosmo)
@@ -215,7 +220,12 @@ source).
     from astropy.cosmology import FlatLambdaCDM
 
     cosmo = FlatLambdaCDM(H0=70, Om0=0.2793)
-    evaluator = spk.build_sup_model_evaluator(SO=500, relation_kind="akino", k_max=8, n=100)
+    evaluator = spk.build_sup_model_evaluator(
+        SO=500,
+        relation_kind="cosmo_power_law",
+        k_max=8,
+        n=100,
+    )
 
     k_data = np.logspace(-1, np.log10(8.0), 60)
     sup_data = np.ones_like(k_data)  # replace with your measured/target suppression
