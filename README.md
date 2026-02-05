@@ -11,24 +11,59 @@ py-SP(k) [(Salcido et al. 2023)](https://academic.oup.com/mnras/article/523/2/22
 
 ## Requirements
 
-The module requires the following:
+Runtime dependencies:
 
 - numpy
+- pydantic (required; used for input validation)
 - scipy
+
+Optional dependencies:
+
+- astropy (required only for the cosmology-based relations; see Methods 2 and 3)
 
 ## Installation
 
-The easiest way to install py-SP(k) is using pip:
+Using pip:
 
-    ```bash
-    pip install pyspk [--user]
-    ```
+    pip install pyspk
 
-The --user flag may be required if you do not have root privileges.
+If you need a user install:
+
+    pip install --user pyspk
+
+If you want the cosmology-based relations (Methods 2 and 3):
+
+    pip install "pyspk[cosmology]"
+
+Using uv (recommended for working from source / running examples):
+
+    uv sync
+
+To run the example notebook dependencies:
+
+    uv sync --extra examples
 
 ## Usage
 
-py-SP(k) is not restrictive to a particular shape of the baryon fraction – halo mass relation. In order to provide flexibility to the user, we have implemented 4 different methods to provide py-SP(k) with the required $f_b$ - $M_\mathrm{halo}$ relation. In the following sections we describe these implementations. A jupyter notebook with more detailed examples can be found within this [repository](https://github.com/jemme07/pyspk/blob/main/examples/pySPk_Examples.ipynb).
+The main entrypoints are:
+
+- `pyspk.sup_model`: compute suppression $P_\mathrm{hydro}(k)/P_\mathrm{DM}(k)$
+- `pyspk.get_limits`: fitting limits for $f_b$ as a function of mass/redshift
+- `pyspk.optimal_mass`: optimal halo mass as a function of scale/redshift
+
+All user-facing inputs are validated via Pydantic models (clear errors are raised if required
+parameters are missing or inconsistent).
+
+py-SP(k) is not restrictive to a particular shape of the baryon fraction – halo mass relation.
+To provide flexibility, there are 4 supported ways to specify the required $f_b$ -
+$M_\mathrm{halo}$ relation. A Jupyter notebook with more detailed examples is available at
+[examples/pySPk_Examples.ipynb](https://github.com/jemme07/pyspk/blob/main/examples/pySPk_Examples.ipynb).
+
+### Quickstart
+
+    import pyspk as spk
+
+    k, sup = spk.sup_model(SO=200, z=0.125, fb_a=0.4, fb_pow=0.3, fb_pivot=10**13.5)
 
 ### Method 1: Using a power-law fit to the $f_b$ - $M_\mathrm{halo}$ relation
 
@@ -40,16 +75,14 @@ where $M_{SO}$ could be either $M_{200c}$ or $M_{500c}$ in $\mathrm{M}_ \odot$, 
 
 Next, we show a simple example using power-law fit parameters:
 
-    ```python
     import pyspk as spk
 
     z = 0.125
     fb_a = 0.4
     fb_pow = 0.3
-    fb_pivot = 10 ** 13.5
+    fb_pivot = 10**13.5
 
     k, sup = spk.sup_model(SO=200, z=z, fb_a=fb_a, fb_pow=fb_pow, fb_pivot=fb_pivot)
-    ```
 
 ### Method 2: Redshift-dependent power-law fit to the $f_b$ - $M_\mathrm{halo}$ relation
 
@@ -65,8 +98,7 @@ Note that this power-law has a normalisation that is redshift dependent, while t
 
 In the following example we use the redshift-dependent power-law fit parameters with a flat LambdaCDM cosmology. Note that any `astropy` cosmology could be used instead.
 
-    ```python
-    import pyspk.model as spk
+    import pyspk as spk
     from astropy.cosmology import FlatLambdaCDM
 
     H0 = 70
@@ -80,7 +112,6 @@ In the following example we use the redshift-dependent power-law fit parameters 
     z = 0.5
 
     k, sup = spk.sup_model(SO=500, z=z, alpha=alpha, beta=beta, gamma=gamma, cosmo=cosmo)
-    ```
 
 ### Method 3: Redshift-dependent double power-law fit to the $f_b$ - $M_\mathrm{halo}$ relation
 
@@ -94,8 +125,7 @@ We find that this redshift-dependent double power-law form provides a good fit t
 
 In the following example we use the redshift-dependent double power-law fit parameters with a flat LambdaCDM cosmology. Note that any `astropy` cosmology could be used instead.
 
-    ```python
-    import pyspk.model as spk
+    import pyspk as spk
     from astropy.cosmology import FlatLambdaCDM
 
     H0 = 68.0
@@ -110,12 +140,38 @@ In the following example we use the redshift-dependent double power-law fit para
     m_pivot = 1e13
     z = 0.2
 
-    k, sup = spk.sup_model(SO=500, z=z, epsilon=epsilon, alpha=alpha, beta=beta, gamma=gamma, m_pivot=m_pivot, cosmo=cosmo)
-    ```
+    k, sup = spk.sup_model(
+        SO=500,
+        z=z,
+        epsilon=epsilon,
+        alpha=alpha,
+        beta=beta,
+        gamma=gamma,
+        m_pivot=m_pivot,
+        cosmo=cosmo,
+    )
 
 ### Method 4: Binned data for the $f_b$ - $M_\mathrm{halo}$ relation
 
 The final, and most flexible method is to provide py-SP(k) with the baryon fraction binned in bins of halo mass. This could be, for example, obtained from observational constraints, measured directly form simulations, or sampled from a predefined distribution or functional form. For an example using data obtained from the BAHAMAS simulations (McCarthy et al. 2017), please refer to the [examples](https://github.com/jemme07/pyspk/blob/main/examples/pySPk_Examples.ipynb) provided.
+
+## Structured (Pydantic) API
+
+If you prefer an explicit, validated input object (e.g., for configuration-driven workflows),
+the Pydantic models are available in `pyspk.api`:
+
+    from pyspk.api import SupModelRequest
+
+    req = SupModelRequest(
+        SO=200,
+        z=0.125,
+        relation={"kind": "power_law", "fb_a": 0.4, "fb_pow": 0.3, "fb_pivot": 10**13.5},
+        k_min=0.1,
+        k_max=8,
+        n=100,
+    )
+
+You can also inspect relation-specific requirements via `help(pyspk.sup_model)`.
 
 ## Priors
 
