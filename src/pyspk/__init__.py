@@ -5,9 +5,17 @@ The primary entrypoint is `sup_model`, which returns the scale-dependent power s
 
 from __future__ import annotations
 
-from .model import get_limits, optimal_mass, sup_model
+from .model import (
+    SupModelEvaluator,
+    build_sup_model_evaluator,
+    get_limits,
+    optimal_mass,
+    sup_model,
+)
 
 __all__ = [
+    "SupModelEvaluator",
+    "build_sup_model_evaluator",
     "get_limits",
     "optimal_mass",
     "sup_model",

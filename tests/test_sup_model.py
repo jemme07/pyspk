@@ -7,6 +7,16 @@ import pyspk
 from pyspk.exceptions import InputValidationError
 
 
+class _DummyCosmo:
+    def __init__(self, omega_m: float):
+        self.omega_m = float(omega_m)
+
+    def efunc(self, z: float) -> float:
+        # Simple flat LCDM-like E(z) with Omega_L = 1 - Omega_m.
+        zf = float(z)
+        return float(np.sqrt(self.omega_m * (1 + zf) ** 3 + (1 - self.omega_m)))
+
+
 def test_sup_model_power_law_shapes() -> None:
     """Returns finite suppression array for a basic power-law relation."""
     k_in = np.array([0.1, 0.5, 1.0, 5.0], dtype=float)
@@ -45,3 +55,55 @@ def test_invalid_so_raises() -> None:
     """Invalid SO values are rejected by input validation."""
     with pytest.raises(InputValidationError):
         pyspk.sup_model(SO=123, z=0.5, fb_a=0.75, fb_pow=0.1)
+
+
+def test_evaluator_matches_sup_model_power_law() -> None:
+    """Evaluator matches sup_model for a power-law relation."""
+    evaluator = pyspk.build_sup_model_evaluator(SO=200, relation_kind="power_law", k_max=2.0, n=32)
+
+    z = 0.3
+    fb_a = 0.5
+    fb_pow = 0.2
+    fb_pivot = 10**13.5
+
+    k1, sup1 = pyspk.sup_model(
+        SO=200,
+        z=z,
+        fb_a=fb_a,
+        fb_pow=fb_pow,
+        fb_pivot=fb_pivot,
+        k_max=2.0,
+        n=32,
+        errors=False,
+    )
+    k2, sup2 = evaluator(z=z, fb_a=fb_a, fb_pow=fb_pow, fb_pivot=fb_pivot)
+
+    assert np.allclose(k1, k2)
+    assert np.allclose(sup1, sup2, equal_nan=True)
+
+
+def test_evaluator_matches_sup_model_akino() -> None:
+    """Evaluator matches sup_model for an Akino relation using a dummy cosmology."""
+    cosmo = _DummyCosmo(omega_m=0.3)
+    evaluator = pyspk.build_sup_model_evaluator(SO=500, relation_kind="akino", k_max=2.0, n=32)
+
+    z = 0.7
+    alpha = 4.16
+    beta = 1.2
+    gamma = 0.39
+
+    k1, sup1 = pyspk.sup_model(
+        SO=500,
+        z=z,
+        alpha=alpha,
+        beta=beta,
+        gamma=gamma,
+        cosmo=cosmo,
+        k_max=2.0,
+        n=32,
+        errors=False,
+    )
+    k2, sup2 = evaluator(z=z, alpha=alpha, beta=beta, gamma=gamma, cosmo=cosmo)
+
+    assert np.allclose(k1, k2)
+    assert np.allclose(sup1, sup2, equal_nan=True)

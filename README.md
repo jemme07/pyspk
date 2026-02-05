@@ -173,6 +173,22 @@ the Pydantic models are available in `pyspk.api`:
 
 You can also inspect relation-specific requirements via `help(pyspk.sup_model)`.
 
+## MCMC / fast inner loops (errors=False)
+
+If you are calling py-SP(k) in a tight loop (e.g., an MCMC likelihood) and you typically use
+`errors=False`, you can build a fast evaluator. This avoids per-call Pydantic validation and
+caches the k-grid and fitting-limit interpolators.
+
+    import pyspk
+
+    evaluator = pyspk.build_sup_model_evaluator(SO=500, relation_kind="akino", k_max=8, n=100)
+
+    # In your MCMC loop:
+    k, sup = evaluator(z=z, alpha=alpha, beta=beta, gamma=gamma, cosmo=cosmo)
+
+For cosmology-based relations, you may also pass `efunc` directly (a callable returning $E(z)$)
+instead of an `astropy` cosmology object.
+
 ## Priors
 
 While py-SP(k) was calibrated using a wide range of sub-grid feedback parameters, some applications may require a more limited range of baryon fractions that encompass current observational constraints. For such applications, we used the gas mass - halo mass and stellar mass - halo mass constraints from the fits in Table 5 in Akino et al. (2022), and find the subset of simulations from our 400 models that agree to within $\pm 2$ or $3 \times \sigma$ of the inferred baryon budget at redshift $z=0.1$. We note that for our simulations, we include all stellar and gas particles within a spherical overdensity radius. Hence, in order to make reasonable comparisons with the fits in Akino et al. (2022), we included an additional 15\% contribution to the total stellar masses from the contribution of blue galaxies, and 30\% additional stellar mass to the brightest cluster galaxies (BCGs) to account for the diffuse intracluster light (ICL, see Akino et al. 2022).

@@ -15,6 +15,7 @@ if __name__ == "__main__" and __package__ is None:  # pragma: no cover
 
 import warnings as _warnings
 from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Any, Callable, Literal, Optional, Protocol, overload
 
 import numpy as _np
@@ -47,6 +48,8 @@ from .schema import (
 
 __all__ = [
     "PySPkError",
+    "SupModelEvaluator",
+    "build_sup_model_evaluator",
     "get_limits",
     "optimal_mass",
     "sup_model",
@@ -663,3 +666,326 @@ def sup_model(
     error_95_p = interp_95_p(data)
 
     return k, sup, error_68_m, error_68_p, error_95_m, error_95_p
+
+
+def _build_limits_interpolators(
+    SO: int,
+) -> tuple[
+    _Akima1DInterpolator,
+    _Akima1DInterpolator,
+    _Akima1DInterpolator,
+    _Akima1DInterpolator,
+    _Akima1DInterpolator,
+    _Akima1DInterpolator,
+]:
+    """Build Akima interpolators for the fitting-limit polynomials.
+
+    This mirrors the work done in `get_limits`, but is designed to be done once and reused.
+    """
+    limits_so = _limits[str(SO)]
+    inter_min_x0 = _Akima1DInterpolator(limits_so["z"], limits_so["min_x0"])
+    inter_min_x1 = _Akima1DInterpolator(limits_so["z"], limits_so["min_x1"])
+    inter_min_x2 = _Akima1DInterpolator(limits_so["z"], limits_so["min_x2"])
+
+    inter_max_x0 = _Akima1DInterpolator(limits_so["z"], limits_so["max_x0"])
+    inter_max_x1 = _Akima1DInterpolator(limits_so["z"], limits_so["max_x1"])
+    inter_max_x2 = _Akima1DInterpolator(limits_so["z"], limits_so["max_x2"])
+
+    return (
+        inter_min_x0,
+        inter_min_x1,
+        inter_min_x2,
+        inter_max_x0,
+        inter_max_x1,
+        inter_max_x2,
+    )
+
+
+def _get_limits_fast(
+    *,
+    z: float,
+    m_halo: _np.ndarray,
+    inter_min_x0: _Akima1DInterpolator,
+    inter_min_x1: _Akima1DInterpolator,
+    inter_min_x2: _Akima1DInterpolator,
+    inter_max_x0: _Akima1DInterpolator,
+    inter_max_x1: _Akima1DInterpolator,
+    inter_max_x2: _Akima1DInterpolator,
+) -> tuple[_np.ndarray, _np.ndarray]:
+    """Fast fitting limits computation with cached interpolators."""
+    logm = _np.log10(m_halo)
+    min_fb = 10 ** (inter_min_x0(z) + inter_min_x1(z) * logm + inter_min_x2(z) * logm**2)
+    max_fb = 10 ** (inter_max_x0(z) + inter_max_x1(z) * logm + inter_max_x2(z) * logm**2)
+    return min_fb * 0.8, max_fb * 1.2
+
+
+def _resolve_efunc(
+    *,
+    cosmo: Any,
+    efunc: Optional[Callable[[float], Any]],
+) -> Callable[[float], Any]:
+    """Resolve an `efunc(z)` callable from either a direct callable or a cosmology-like object."""
+    if efunc is not None:
+        if not callable(efunc):
+            raise InputValidationError("`efunc` must be callable.")
+        return efunc
+    return _get_efunc(cosmo)
+
+
+@dataclass(frozen=True)
+class SupModelEvaluator:
+    """Fast evaluator for repeated SP(k) calls (e.g., MCMC inner loops).
+
+    This is an additive performance API:
+
+    - It keeps `sup_model(...)` unchanged.
+    - It avoids per-call Pydantic validation and avoids list<->array roundtrips.
+    - It caches the k-grid and the fitting-limit interpolators.
+
+    Notes:
+        This evaluator only supports `errors=False`.
+    """
+
+    SO: int
+    relation_kind: Literal["power_law", "binned", "akino", "double_power_law"]
+    k: _np.ndarray
+    logk: _np.ndarray
+    inter_min_x0: _Akima1DInterpolator
+    inter_min_x1: _Akima1DInterpolator
+    inter_min_x2: _Akima1DInterpolator
+    inter_max_x0: _Akima1DInterpolator
+    inter_max_x1: _Akima1DInterpolator
+    inter_max_x2: _Akima1DInterpolator
+
+    def __call__(
+        self,
+        *,
+        z: float,
+        fb_a: Optional[float] = None,
+        fb_pow: Optional[float] = None,
+        fb_pivot: float = 1.0,
+        M_halo: Optional[ArrayLike] = None,
+        fb: Optional[ArrayLike] = None,
+        extrapolate: bool = False,
+        epsilon: Optional[float] = None,
+        alpha: Optional[float] = None,
+        beta: Optional[float] = None,
+        gamma: Optional[float] = None,
+        m_pivot: Optional[float] = None,
+        cosmo: Optional[Any] = None,
+        efunc: Optional[Callable[[float], Any]] = None,
+        verbose: bool = False,
+    ) -> tuple[_np.ndarray, _np.ndarray]:
+        """Evaluate suppression for a given redshift and relation parameters.
+
+        Args:
+            z: Redshift.
+            fb_a: Power-law normalization (power-law relation).
+            fb_pow: Power-law exponent (power-law relation).
+            fb_pivot: Power-law pivot mass in M_sun units (power-law relation).
+            M_halo: Binned halo mass array (binned relation).
+            fb: Binned baryon fraction array (binned relation).
+            extrapolate: Extrapolate binned relations beyond bounds (binned relation).
+            epsilon: Double power-law normalization parameter (double power-law relation).
+            alpha: Akino normalization OR low-mass slope for double power-law.
+            beta: Akino slope OR high-mass slope for double power-law.
+            gamma: Redshift dependence parameter (Akino/double power-law).
+            m_pivot: Double power-law pivot mass in M_sun units.
+            cosmo: Cosmology-like object providing `efunc(z)` (Akino/double power-law).
+            efunc: Optional direct callable for `E(z)`; if provided, `cosmo` is not used.
+            verbose: Whether to emit informational warnings.
+
+        Returns:
+            Tuple `(k, sup)`.
+
+        Raises:
+            InputValidationError: If required parameters are missing for the selected relation kind.
+        """
+        if z < CALIBRATED_Z_MIN:
+            _warnings.warn(
+                (
+                    f"pyspk was calibrated down to z = {CALIBRATED_Z_MIN}. "
+                    f"Redshifts z < {CALIBRATED_Z_MIN} may not be accurately "
+                    "reproduced by the model."
+                ),
+                stacklevel=2,
+            )
+
+        params = _get_params(self.SO, float(z))
+        best_mass = _optimal_mass_funct(self.k, params)
+
+        if self.relation_kind == "power_law":
+            if fb_a is None or fb_pow is None:
+                raise InputValidationError("Power-law relation requires `fb_a` and `fb_pow`.")
+            if verbose:
+                _warnings.warn(
+                    (
+                        "Using power-law fit for fb - M_halo at "
+                        f"z={z:.3f}, normalised at M_halo = {fb_pivot:.2e} [M_sun]."
+                    ),
+                    stacklevel=2,
+                )
+            f_b = _power_law(10**best_mass, float(fb_a), float(fb_pow), float(fb_pivot))
+
+        elif self.relation_kind == "binned":
+            if M_halo is None or fb is None:
+                raise InputValidationError("Binned relation requires both `M_halo` and `fb`.")
+            if verbose:
+                _warnings.warn(f"Using binned data for fb - M_halo at z={z:.3f}.", stacklevel=2)
+            m_arr = _np.asarray(M_halo, dtype=float)
+            fb_arr = _np.asarray(fb, dtype=float)
+            fb_inter = _Akima1DInterpolator(_np.log10(m_arr), _np.log10(fb_arr))
+            fb_inter.extrapolate = bool(extrapolate)
+            f_b = 10 ** fb_inter(best_mass)
+
+        elif self.relation_kind == "double_power_law":
+            if epsilon is None:
+                raise InputValidationError("Double power-law relation requires `epsilon`.")
+            if alpha is None:
+                raise InputValidationError("Double power-law relation requires `alpha`.")
+            if beta is None:
+                raise InputValidationError("Double power-law relation requires `beta`.")
+            if gamma is None:
+                raise InputValidationError("Double power-law relation requires `gamma`.")
+            if m_pivot is None:
+                raise InputValidationError("Double power-law relation requires `m_pivot`.")
+            if cosmo is None and efunc is None:
+                raise InputValidationError(
+                    "Double power-law relation requires either `cosmo` (with `efunc(z)`) "
+                    "or `efunc`."
+                )
+            if verbose:
+                _warnings.warn(
+                    f"Using double power law for fb - M_halo at z={z:.3f}.",
+                    stacklevel=2,
+                )
+
+            epsilon_f = float(epsilon)
+            alpha_f = float(alpha)
+            beta_f = float(beta)
+            gamma_f = float(gamma)
+            m_pivot_f = float(m_pivot)
+
+            efunc_callable = _resolve_efunc(cosmo=cosmo, efunc=efunc)
+            A = 0.5 * epsilon_f * _np.power(efunc_callable(z) / efunc_callable(0.3), gamma_f)
+            B = _np.power(10**best_mass / m_pivot_f, alpha_f)
+            C = _np.power(10**best_mass / m_pivot_f, beta_f)
+            f_b = A * (B + C)
+
+        else:  # akino
+            if alpha is None:
+                raise InputValidationError("Akino relation requires `alpha`.")
+            if beta is None:
+                raise InputValidationError("Akino relation requires `beta`.")
+            if gamma is None:
+                raise InputValidationError("Akino relation requires `gamma`.")
+            if cosmo is None and efunc is None:
+                raise InputValidationError("Akino relation requires either `cosmo` or `efunc`.")
+            if verbose:
+                _warnings.warn(
+                    f"Using an Akino et al. 2022 power-law fit for fb - M_halo at z={z:.3f}.",
+                    stacklevel=2,
+                )
+
+            alpha_f = float(alpha)
+            beta_f = float(beta)
+            gamma_f = float(gamma)
+
+            efunc_callable = _resolve_efunc(cosmo=cosmo, efunc=efunc)
+            A = _np.exp(alpha_f) / 100
+            B = _np.power(10**best_mass / 1e14, beta_f - 1)
+            C = _np.power(efunc_callable(z) / efunc_callable(0.3), gamma_f)
+            f_b = A * B * C
+
+        min_fb, max_fb = _get_limits_fast(
+            z=float(z),
+            m_halo=10**best_mass,
+            inter_min_x0=self.inter_min_x0,
+            inter_min_x1=self.inter_min_x1,
+            inter_min_x2=self.inter_min_x2,
+            inter_max_x0=self.inter_max_x0,
+            inter_max_x1=self.inter_max_x1,
+            inter_max_x2=self.inter_max_x2,
+        )
+        out_min = f_b < min_fb
+        out_max = f_b > max_fb
+        mask = _np.logical_or(out_min, out_max)
+
+        x0 = _lambda_funct(self.logk, params)
+        x1 = _mu_funct(self.logk, params)
+        x2 = _nu_func(self.logk, params)
+        sup = x0 - (x0 - x1) * _np.exp(-x2 * f_b)
+        sup = _np.asarray(sup)
+        sup[mask] = _np.nan
+
+        return self.k, sup
+
+
+def build_sup_model_evaluator(
+    *,
+    SO: int,
+    relation_kind: Literal["power_law", "binned", "akino", "double_power_law"],
+    k_array: Optional[ArrayLike] = None,
+    k_min: float = 0.1,
+    k_max: float = 8,
+    n: int = 100,
+) -> SupModelEvaluator:
+    """Build a fast SP(k) evaluator for repeated calls.
+
+    Args:
+        SO: Spherical over-density. Supported values: 200 or 500.
+        relation_kind: Relation kind. This fixes which parameters are required at call time.
+        k_array: Explicit k array in [h/Mpc]. If provided, `k_min`, `k_max`, and `n` are ignored.
+        k_min: Minimum k in [h/Mpc] for generated grid.
+        k_max: Maximum k in [h/Mpc] for generated grid.
+        n: Number of log-spaced k samples.
+
+    Returns:
+        A callable `SupModelEvaluator` instance.
+    """
+    if SO not in (200, 500):
+        raise InputValidationError("SO must be 200 or 500.")
+
+    if k_array is not None:
+        k = _np.asarray(k_array, dtype=float)
+        k_max_val = float(k.max())
+    else:
+        k = _np.round(_np.logspace(_np.log10(k_min), _np.log10(k_max), int(n)), 6)
+        k_max_val = float(k.max())
+
+    if k_max_val > CALIBRATED_K_MAX:
+        raise CalibrationRangeError(
+            f"pyspk was calibrated up to k_max = {CALIBRATED_K_MAX} [h/Mpc]. "
+            f"Please specify k <= {CALIBRATED_K_MAX} [h/Mpc]."
+        )
+    if k_max_val > K_NYQUIST:
+        _warnings.warn(
+            (
+                f"Scales with k_max > k_ny = {K_NYQUIST} [h/Mpc] "
+                "may not be accurately reproduced by the model."
+            ),
+            stacklevel=2,
+        )
+
+    logk = _np.log10(k)
+    (
+        inter_min_x0,
+        inter_min_x1,
+        inter_min_x2,
+        inter_max_x0,
+        inter_max_x1,
+        inter_max_x2,
+    ) = _build_limits_interpolators(SO)
+
+    return SupModelEvaluator(
+        SO=SO,
+        relation_kind=relation_kind,
+        k=k,
+        logk=logk,
+        inter_min_x0=inter_min_x0,
+        inter_min_x1=inter_min_x1,
+        inter_min_x2=inter_min_x2,
+        inter_max_x0=inter_max_x0,
+        inter_max_x1=inter_max_x1,
+        inter_max_x2=inter_max_x2,
+    )
