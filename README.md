@@ -21,6 +21,12 @@ Optional dependencies:
 
 - astropy (required only for the cosmology-based relations; see Methods 2 and 3)
 
+Example (notebook) dependencies:
+
+- pandas, matplotlib, cycler
+- emcee (MCMC sketch)
+- corner (posterior corner plot)
+
 ## Installation
 
 Using pip:
