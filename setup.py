@@ -18,7 +18,7 @@ def _read_readme() -> str:
 
 setup(
     name="pyspk",
-    version="1.8.0",
+    version="2.0.0",
     description=(
         "Python package to predict the suppression of the total matter power spectrum "
         "due to baryonic physics"
