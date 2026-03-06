@@ -246,7 +246,9 @@ source).
             return -np.inf
         return -0.5 * np.sum(((sup - sup_data) / sigma) ** 2)
 
-## Priors
+## Priors (Method 2: Akino-like Single Power-Law)
+
+These priors apply to the Method 2 redshift-dependent single power-law (Akino-like) functional form only (`relation_kind="cosmo_power_law"`; parameters `alpha`, `beta`, `gamma`).
 
 While py-SP(k) was calibrated using a wide range of sub-grid feedback parameters, some applications may require a more limited range of baryon fractions that encompass current observational constraints. For such applications, we used the gas mass - halo mass and stellar mass - halo mass constraints from the fits in Table 5 in Akino et al. (2022), and find the subset of simulations from our 400 models that agree to within $\pm 2$ or $3 \times \sigma$ of the inferred baryon budget at redshift $z=0.1$. We note that for our simulations, we include all stellar and gas particles within a spherical overdensity radius. Hence, in order to make reasonable comparisons with the fits in Akino et al. (2022), we included an additional 15\% contribution to the total stellar masses from the contribution of blue galaxies, and 30\% additional stellar mass to the brightest cluster galaxies (BCGs) to account for the diffuse intracluster light (ICL, see Akino et al. 2022).
 
