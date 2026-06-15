@@ -820,7 +820,8 @@ class SupModelEvaluator:
             Tuple `(k, sup)`.
 
         Raises:
-            InputValidationError: If required parameters are missing for the selected relation kind.
+            InputValidationError: If required relation parameters are missing, or if `z` is
+                invalid (`z < 0`, non-finite, or `z > 3` when `z_out_of_range="raise"`).
         """
         zf = float(z)
         if not _np.isfinite(zf) or zf < 0:
@@ -992,6 +993,8 @@ def build_sup_model_evaluator(
     """
     if SO not in (200, 500):
         raise InputValidationError("SO must be 200 or 500.")
+    if z_out_of_range not in ("raise", "nan"):
+        raise InputValidationError("z_out_of_range must be either 'raise' or 'nan'.")
 
     if k_array is not None:
         k = _np.asarray(k_array, dtype=float)

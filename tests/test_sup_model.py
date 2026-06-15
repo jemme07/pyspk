@@ -136,3 +136,15 @@ def test_evaluator_nan_policy_for_z_above_calibrated_max() -> None:
 
     assert np.all(np.isfinite(k))
     assert np.isnan(sup).all()
+
+
+def test_build_evaluator_rejects_invalid_z_out_of_range_policy() -> None:
+    """Builder validates z_out_of_range at runtime."""
+    with pytest.raises(InputValidationError, match="z_out_of_range"):
+        pyspk.build_sup_model_evaluator(
+            SO=200,
+            relation_kind="power_law",
+            k_max=2.0,
+            n=32,
+            z_out_of_range="invalid",  # type: ignore[arg-type]
+        )
