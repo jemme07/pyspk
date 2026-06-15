@@ -198,6 +198,9 @@ If you are calling py-SP(k) in a tight loop (e.g., an MCMC likelihood) and you t
 `errors=False`, you can build a fast evaluator. This avoids per-call Pydantic validation and
 caches the k-grid and fitting-limit interpolators.
 
+By default, the evaluator enforces the same calibrated redshift ceiling as `sup_model` and
+raises for `z > 3`.
+
     import pyspk
 
     evaluator = pyspk.build_sup_model_evaluator(
@@ -209,6 +212,19 @@ caches the k-grid and fitting-limit interpolators.
 
     # In your MCMC loop:
     k, sup = evaluator(z=z, alpha=alpha, beta=beta, gamma=gamma, cosmo=cosmo)
+
+For MCMC proposals that may wander outside the calibrated range, you can opt into
+`z_out_of_range="nan"` and map invalid points to `-np.inf` in your likelihood:
+
+This rejects only that proposal (log-probability = -inf); the chain continues.
+
+    evaluator = pyspk.build_sup_model_evaluator(
+        SO=500,
+        relation_kind="cosmo_power_law",
+        k_max=8,
+        n=100,
+        z_out_of_range="nan",
+    )
 
 For cosmology-based relations, you may also pass `efunc` directly (a callable returning $E(z)$)
 instead of an `astropy` cosmology object.

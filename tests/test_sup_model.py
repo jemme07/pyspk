@@ -112,3 +112,39 @@ def test_evaluator_matches_sup_model_cosmo_power_law() -> None:
 
     assert np.allclose(k1, k2)
     assert np.allclose(sup1, sup2, equal_nan=True)
+
+
+def test_evaluator_raises_for_z_above_calibrated_max() -> None:
+    """Fast evaluator defaults to strict z validation (z <= 3)."""
+    evaluator = pyspk.build_sup_model_evaluator(SO=200, relation_kind="power_law", k_max=2.0, n=32)
+
+    with pytest.raises(InputValidationError, match=r"z must be <= 3\.0"):
+        evaluator(z=3.1, fb_a=0.5, fb_pow=0.2, fb_pivot=10**13.5)
+
+
+def test_evaluator_nan_policy_for_z_above_calibrated_max() -> None:
+    """Optional NaN policy returns finite k and NaN suppression for z > 3."""
+    evaluator = pyspk.build_sup_model_evaluator(
+        SO=200,
+        relation_kind="power_law",
+        k_max=2.0,
+        n=32,
+        z_out_of_range="nan",
+    )
+
+    k, sup = evaluator(z=3.1, fb_a=0.5, fb_pow=0.2, fb_pivot=10**13.5)
+
+    assert np.all(np.isfinite(k))
+    assert np.isnan(sup).all()
+
+
+def test_build_evaluator_rejects_invalid_z_out_of_range_policy() -> None:
+    """Builder validates z_out_of_range at runtime."""
+    with pytest.raises(InputValidationError, match="z_out_of_range"):
+        pyspk.build_sup_model_evaluator(
+            SO=200,
+            relation_kind="power_law",
+            k_max=2.0,
+            n=32,
+            z_out_of_range="invalid",  # type: ignore[arg-type]
+        )

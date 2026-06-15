@@ -3629,7 +3629,7 @@ wheels = [
 
 [[package]]
 name = "pyspk"
-version = "2.0.0"
+version = "2.0.1"
 source = { editable = "." }
 dependencies = [
     { name = "numpy", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
@@ -3656,6 +3656,7 @@ dev = [
     { name = "pytest", version = "8.4.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "pytest", version = "9.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "ruff" },
+    { name = "setuptools" },
 ]
 examples = [
     { name = "astropy", version = "5.3.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
@@ -3689,6 +3690,7 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.6" },
     { name = "scipy", specifier = ">=1.8" },
+    { name = "setuptools", marker = "extra == 'dev'", specifier = ">=69" },
     { name = "typing-extensions", specifier = ">=4.8" },
 ]
 provides-extras = ["cosmology", "examples", "dev"]

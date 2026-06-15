@@ -26,6 +26,7 @@ from typing_extensions import TypeAlias
 
 from .constants import (
     CALIBRATED_K_MAX,
+    CALIBRATED_Z_MAX,
     CALIBRATED_Z_MIN,
     K_NYQUIST,
 )
@@ -768,6 +769,7 @@ class SupModelEvaluator:
     inter_max_x0: _Akima1DInterpolator
     inter_max_x1: _Akima1DInterpolator
     inter_max_x2: _Akima1DInterpolator
+    z_out_of_range: Literal["raise", "nan"] = "raise"
 
     def __call__(
         self,
@@ -807,13 +809,37 @@ class SupModelEvaluator:
             efunc: Optional direct callable for `E(z)`; if provided, `cosmo` is not used.
             verbose: Whether to emit informational warnings.
 
+        Notes:
+            The redshift behavior for values above the calibrated range is controlled by
+            `z_out_of_range` set when building the evaluator:
+
+            - `"raise"` (default): raises `InputValidationError` for `z > 3`.
+            - `"nan"`: returns an all-NaN suppression vector for `z > 3`.
+
         Returns:
             Tuple `(k, sup)`.
 
         Raises:
-            InputValidationError: If required parameters are missing for the selected relation kind.
+            InputValidationError: If required relation parameters are missing, or if `z` is
+                invalid (`z < 0`, non-finite, or `z > 3` when `z_out_of_range="raise"`).
         """
-        if z < CALIBRATED_Z_MIN:
+        zf = float(z)
+        if not _np.isfinite(zf) or zf < 0:
+            raise InputValidationError("z must be finite and >= 0")
+        if zf > CALIBRATED_Z_MAX:
+            if self.z_out_of_range == "nan":
+                if verbose:
+                    _warnings.warn(
+                        (
+                            f"Received z={zf:.3f} > calibrated maximum z={CALIBRATED_Z_MAX}. "
+                            "Returning NaNs because z_out_of_range='nan'."
+                        ),
+                        stacklevel=2,
+                    )
+                return self.k, _np.full_like(self.k, _np.nan, dtype=float)
+            raise InputValidationError(f"z must be <= {CALIBRATED_Z_MAX}")
+
+        if zf < CALIBRATED_Z_MIN:
             _warnings.warn(
                 (
                     f"pyspk was calibrated down to z = {CALIBRATED_Z_MIN}. "
@@ -823,7 +849,7 @@ class SupModelEvaluator:
                 stacklevel=2,
             )
 
-        params = _get_params(self.SO, float(z))
+        params = _get_params(self.SO, zf)
         best_mass = _optimal_mass_funct(self.k, params)
 
         if self.relation_kind == "power_law":
@@ -879,7 +905,7 @@ class SupModelEvaluator:
             m_pivot_f = float(m_pivot)
 
             efunc_callable = _resolve_efunc(cosmo=cosmo, efunc=efunc)
-            A = 0.5 * epsilon_f * _np.power(efunc_callable(z) / efunc_callable(0.3), gamma_f)
+            A = 0.5 * epsilon_f * _np.power(efunc_callable(zf) / efunc_callable(0.3), gamma_f)
             B = _np.power(10**best_mass / m_pivot_f, alpha_f)
             C = _np.power(10**best_mass / m_pivot_f, beta_f)
             f_b = A * (B + C)
@@ -911,11 +937,11 @@ class SupModelEvaluator:
             efunc_callable = _resolve_efunc(cosmo=cosmo, efunc=efunc)
             A = _np.exp(alpha_f) / 100
             B = _np.power(10**best_mass / 1e14, beta_f - 1)
-            C = _np.power(efunc_callable(z) / efunc_callable(0.3), gamma_f)
+            C = _np.power(efunc_callable(zf) / efunc_callable(0.3), gamma_f)
             f_b = A * B * C
 
         min_fb, max_fb = _get_limits_fast(
-            z=float(z),
+            z=zf,
             m_halo=10**best_mass,
             inter_min_x0=self.inter_min_x0,
             inter_min_x1=self.inter_min_x1,
@@ -946,6 +972,7 @@ def build_sup_model_evaluator(
     k_min: float = 0.1,
     k_max: float = 8,
     n: int = 100,
+    z_out_of_range: Literal["raise", "nan"] = "raise",
 ) -> SupModelEvaluator:
     """Build a fast SP(k) evaluator for repeated calls.
 
@@ -956,12 +983,18 @@ def build_sup_model_evaluator(
         k_min: Minimum k in [h/Mpc] for generated grid.
         k_max: Maximum k in [h/Mpc] for generated grid.
         n: Number of log-spaced k samples.
+        z_out_of_range:
+            Behavior for `z > 3` in evaluator calls. Use `"raise"` (default) for strict
+            consistency with `sup_model`, or `"nan"` for MCMC-style workflows that map invalid
+            proposals to non-finite likelihoods.
 
     Returns:
         A callable `SupModelEvaluator` instance.
     """
     if SO not in (200, 500):
         raise InputValidationError("SO must be 200 or 500.")
+    if z_out_of_range not in ("raise", "nan"):
+        raise InputValidationError("z_out_of_range must be either 'raise' or 'nan'.")
 
     if k_array is not None:
         k = _np.asarray(k_array, dtype=float)
@@ -1005,4 +1038,5 @@ def build_sup_model_evaluator(
         inter_max_x0=inter_max_x0,
         inter_max_x1=inter_max_x1,
         inter_max_x2=inter_max_x2,
+        z_out_of_range=z_out_of_range,
     )
