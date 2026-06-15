@@ -57,6 +57,7 @@ dev = [
   "ruff>=0.6",
   "black>=24",
   "mypy>=1.8",
+  "setuptools>=69",
 ]
 
 [tool.setuptools]
